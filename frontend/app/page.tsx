@@ -1,9 +1,24 @@
 import Image from "next/image";
+import HeroBg from "./assets/hero_bg.png";
 
 export default function Home() {
   return (
     <>
-      <button className="btn btn-primary">Click me</button>
+      <div
+        className="hero min-h-screen no-offset -mt-28"
+        style={{
+          backgroundImage: `url(${HeroBg.src})`,
+        }}
+      >
+        <div className="hero-overlay"></div>
+        <div className="hero-content text-neutral-content text-center">
+          <div className="max-w-md">
+            <h1 className="mb-5 text-5xl font-bold">StygianMaxxer</h1>
+            <p className="mb-5">Unofficial Stygian Onslaught database.</p>
+            <button className="btn btn-primary">Browse</button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
