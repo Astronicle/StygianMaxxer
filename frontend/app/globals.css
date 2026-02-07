@@ -1,26 +1,56 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@plugin "daisyui/theme" {
+  name: "blightpurge";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* base */
+  --color-base-100: oklch(20% 0.01 220);  /* #161B1B */
+  --color-base-200: oklch(26% 0.03 280);  /* #292434 */
+  --color-base-300: oklch(32% 0.04 285);  /* #3A3246 */
+  --color-base-content: oklch(92% 0.02 80); /* #E3DBD2 */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  /* primary */
+  --color-primary: oklch(42% 0.10 300);  /* #533A62 */
+  --color-primary-content: oklch(92% 0.02 80);
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* secondary */
+  --color-secondary: oklch(55% 0.12 70); /* #99672C */
+  --color-secondary-content: oklch(18% 0.01 220);
+
+  /* accent */
+  --color-accent: oklch(70% 0.05 85); /* #AD998D */
+  --color-accent-content: oklch(18% 0.01 220);
+
+  /* neutral */
+  --color-neutral: oklch(26% 0.04 285); /* #292434 */
+  --color-neutral-content: oklch(92% 0.02 80);
+
+  /* semantic */
+  --color-info: oklch(62% 0.12 240);    /* #6B8FB3 */
+  --color-success: oklch(60% 0.10 150); /* #6FA58A */
+  --color-warning: oklch(70% 0.12 85);  /* #C6A25A */
+  --color-error: oklch(55% 0.14 25);    /* #B85C5C */
+
+  --color-info-content: oklch(96% 0.01 240);
+  --color-success-content: oklch(96% 0.01 150);
+  --color-warning-content: oklch(18% 0.02 85);
+  --color-error-content: oklch(96% 0.01 25);
+
+  /* radius */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+
+  /* sizing */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  /* borders & effects */
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
