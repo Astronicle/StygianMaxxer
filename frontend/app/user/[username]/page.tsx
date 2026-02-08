@@ -1,6 +1,6 @@
 import { mockUser } from "@/app/lib/mock/user";
 import UserHeader from "@/app/components/user/UserHeader";
-import PostCard from "@/app/components/post/PostCard";
+import PostCard from "@/app/components/user/PostCard";
 
 type PageProps = {
   params: {

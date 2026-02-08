@@ -4,7 +4,7 @@ export const mockPost = [
     title: "First post",
     description: "Hello world",
     rating: 5,
-    videoLink: null,
+    videoLink: "https://youtu.be/NCzUV95VIEI",
     createdAt: "2025-01-10T12:00:00Z",
 
     author: {
