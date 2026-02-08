@@ -21,6 +21,7 @@ export const mockPost = [
           id: 1,
           name: "Overseer",
           icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHfI1dIH0BWPtYYXrbS2fLoZcqLhCWKjOtiw&s",
+          buildInfo: "kazuha on vv",
 
           characters: [
             {
@@ -50,6 +51,7 @@ export const mockPost = [
           id: 2,
           name: "Lava Dragon",
           icon: "https://static.wikia.nocookie.net/gensin-impact/images/e/ee/Enemy_Lava_Dragon_Statue.png/revision/latest/scale-to-width-down/1200?cb=20250326024556",
+          buildInfo: "furina on totm",
 
           characters: [
             {
