@@ -1,5 +1,6 @@
 import Image from "next/image";
 import HeroBg from "./assets/hero_bg.png";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -15,7 +16,9 @@ export default function Home() {
           <div className="max-w-md">
             <h1 className="mb-5 text-5xl font-bold">StygianMaxxer</h1>
             <p className="mb-5">Unofficial Stygian Onslaught database.</p>
-            <button className="btn btn-primary">Browse</button>
+            <Link href="/post">
+              <button className="btn btn-primary">Browse</button>
+            </Link>
           </div>
         </div>
       </div>

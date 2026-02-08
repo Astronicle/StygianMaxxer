@@ -30,9 +30,11 @@ function Navbar() {
 
           {/* Right */}
           <div className="navbar-end">
-            <button className="btn btn-primary btn-sm rounded-full">
-              Login
-            </button>
+            <Link href="/about">
+              <button className="btn btn-primary btn-sm rounded-full">
+                About
+              </button>
+            </Link>
           </div>
         </div>
       </div>
