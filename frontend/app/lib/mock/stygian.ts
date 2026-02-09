@@ -19,5 +19,27 @@ export const mockStygian = [
         icon: "https://static.wikia.nocookie.net/gensin-impact/images/0/0d/Enemy_Solitary_Suanni.png/revision/latest/scale-to-width-down/300?cb=20240916082016",
       },
     ],
+    posts: [
+      {
+        postID: 232,
+        title: "First post",
+        description: "Hello world",
+        rating: 5,
+        username: "Astronicle",
+        createdAt: "2025-01-10T12:00:00Z",
+        bosses: [
+          {
+            id: 1,
+            name: "Overseer",
+            icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHfI1dIH0BWPtYYXrbS2fLoZcqLhCWKjOtiw&s",
+          },
+          {
+            id: 2,
+            name: "Lava Dragon",
+            icon: "https://static.wikia.nocookie.net/gensin-impact/images/e/ee/Enemy_Lava_Dragon_Statue.png/revision/latest/scale-to-width-down/1200?cb=20250326024556",
+          },
+        ],
+      },
+    ],
   },
 ];
