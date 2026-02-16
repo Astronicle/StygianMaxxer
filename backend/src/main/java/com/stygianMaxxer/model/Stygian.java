@@ -16,6 +16,9 @@ public class Stygian {
     @Column(name = "stygian_id", nullable = false)
     private short id;
 
+    @Column(name = "stygian_name", nullable = false, unique = true)
+    private String name;
+
     @Column(name = "version", nullable = false, unique = true)
     private String version;
 }

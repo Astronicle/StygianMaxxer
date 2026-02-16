@@ -14,6 +14,7 @@ public class LookUpController {
     private final ElementService elementService;
     private final WeaponTypeService weaponTypeService;
     private final CharacterService characterService;
+    private final BossService bossService;
 
     //Elements
     @GetMapping("/elements")
@@ -56,5 +57,16 @@ public class LookUpController {
     @GetMapping("/characters/by-weapon/{weaponTypeId}")
     public List<CharacterResponse> getCharactersByWeapon(@PathVariable short weaponTypeId) {
         return characterService.getByWeaponType(weaponTypeId);
+    }
+
+    //Bosses
+    @GetMapping("/bosses")
+    public List<BossResponse> getBosses() {
+        return bossService.getAllBosses();
+    }
+
+    @GetMapping("/bosses/{slug}")
+    public BossResponse getBossBySlug(@PathVariable String slug) {
+        return bossService.getBySlug(slug);
     }
 }
