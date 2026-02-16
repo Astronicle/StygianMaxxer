@@ -19,6 +19,7 @@ CREATE TABLE boss (
 
 CREATE TABLE stygian (
     stygian_id SMALLINT PRIMARY KEY,
+    stygian_name TEXT NOT NULL UNIQUE,
     version TEXT NOT NULL UNIQUE
 );
 
@@ -56,7 +57,6 @@ CREATE TABLE stygian_boss (
         AND 3
     ),
     PRIMARY KEY (stygian_id, boss_id),
-    UNIQUE (boss_id, slot),
     CONSTRAINT fk_stygianboss_stygian FOREIGN KEY (stygian_id) REFERENCES stygian(stygian_id),
     CONSTRAINT fk_stygianboss_boss FOREIGN KEY (boss_id) REFERENCES boss(boss_id)
 );

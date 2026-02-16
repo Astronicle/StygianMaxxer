@@ -1,0 +1,18 @@
+INSERT INTO boss (boss_id, boss_slug, boss_name)
+VALUES (1, 'abyss-cat', 'Lord of the Hidden Depths: Whisperer of Nightmares'),
+       (2, 'baptist', 'Iniquitous Baptist'),
+       (3, 'cocijo', 'Cocijo'),
+       (4, 'crab-tsar', 'Crab Tsar'),
+       (5, 'drake', 'Aeonblight Drake'),
+       (6, 'efg', 'Experimental Field Generator'),
+       (7, 'fire-crab', 'Emperor of Fire and Iron'),
+       (8, 'frost-operative', 'Fatui Frost Operative'),
+       (9, 'herra', 'Frostnight Herra'),
+       (10, 'iktomisaur', 'Iktomisaur'),
+       (11, 'lava-dragon', 'Lava Dragon Statue'),
+       (12, 'overseer', 'Secret Source Automaton: Overseer Device'),
+       (13, 'papilla', 'Tenebrous Papilla'),
+       (14, 'pipilpan', 'Pipilpan Idol'),
+       (15, 'shock-trooper', 'Fireblade Shock Trooper'),
+       (16, 'sigurd', 'Sigurd'),
+       (17, 'tulpa', 'Hydro Tulpa');
