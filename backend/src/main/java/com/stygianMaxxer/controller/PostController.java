@@ -3,6 +3,8 @@ package com.stygianMaxxer.controller;
 import com.stygianMaxxer.dto.PostCreateRequest;
 import com.stygianMaxxer.dto.PostResponse;
 import com.stygianMaxxer.dto.PostSummaryResponse;
+import com.stygianMaxxer.dto.PostRateRequest;
+import com.stygianMaxxer.dto.RatingSummaryResponse;
 import com.stygianMaxxer.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +34,16 @@ public class PostController {
     @GetMapping
     public Page<PostSummaryResponse> getPosts(Pageable pageable) {
         return postService.getPosts(pageable);
+    }
+
+    @PostMapping("/{postId}/rate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ratePost(@PathVariable Integer postId, @Valid @RequestBody PostRateRequest request) {
+        postService.ratePost(postId, request);
+    }
+
+    @GetMapping("/{postId}/rating-summary")
+    public RatingSummaryResponse getRatingSummary(@PathVariable Integer postId) {
+        return postService.getRatingSummary(postId);
     }
 }
