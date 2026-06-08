@@ -130,4 +130,95 @@ public class PostServiceImpl implements PostService {
     public RatingSummaryResponse getRatingSummary(Integer postId) {
         return postRatingRepository.getSummaryByPostId(postId);
     }
+
+    /*
+        COMMAND — Update aggregate
+     */
+    @Override
+    @Transactional
+    public PostResponse updatePost(Integer postId, Integer accountId, PostUpdateRequest request) {
+
+        // Load full graph so orphanRemoval can track existing children
+        Post post = postRepository.findWithGraphByPostId(postId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Post not found: " + postId));
+
+        // Ownership check — only the author may edit their post
+        if (!post.getAccount().getAccountId().equals(accountId)) {
+            throw new IllegalArgumentException("You do not have permission to edit this post");
+        }
+
+        // Apply scalar fields only when non-null (patch semantics)
+        if (request.title() != null) {
+            post.setPostTitle(request.title());
+        }
+        if (request.description() != null) {
+            post.setPostDesc(request.description());
+        }
+        if (request.videoLink() != null) {
+            post.setVideoLink(request.videoLink());
+        }
+
+        // Replace boss list when provided
+        if (request.bosses() != null) {
+
+            // orphanRemoval = true on Post.bosses means clearing the list will
+            // schedule DELETE for every existing PostBoss (and its characters).
+            post.getBosses().clear();
+
+            request.bosses().forEach(bossReq -> {
+
+                Boss boss = bossRepository.findById(bossReq.bossId())
+                        .orElseThrow(() -> new java.util.NoSuchElementException("Boss not found: " + bossReq.bossId()));
+
+                PostBoss postBoss = PostBoss.builder()
+                        .boss(boss)
+                        .buildInfo(bossReq.buildInfo())
+                        .build();
+
+                bossReq.characters().forEach(charReq -> {
+
+                    Character character = characterRepository.findById(charReq.charId())
+                            .orElseThrow(() -> new java.util.NoSuchElementException("Character not found: " + charReq.charId()));
+
+                    PostBossCharacter pbc = PostBossCharacter.builder()
+                            .character(character)
+                            .hasSig(charReq.hasSig())
+                            .cons(charReq.cons())
+                            .build();
+
+                    pbc.setSlot(charReq.slot());
+
+                    postBoss.addCharacter(pbc);
+                });
+
+                post.addBoss(postBoss);
+            });
+        }
+
+        post.setUpdatedAt(java.time.OffsetDateTime.now());
+
+        Post saved = postRepository.save(post);
+
+        return PostMapper.toResponse(saved);
+    }
+
+    /*
+        COMMAND — Delete aggregate
+     */
+    @Override
+    @Transactional
+    public void deletePost(Integer postId, Integer accountId) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Post not found: " + postId));
+
+        // Ownership check — only the author may delete their post
+        if (!post.getAccount().getAccountId().equals(accountId)) {
+            throw new IllegalArgumentException("You do not have permission to delete this post");
+        }
+
+        // CascadeType.ALL + orphanRemoval propagates delete to PostBoss → PostBossCharacter.
+        // PostRating rows reference post_id with ON DELETE CASCADE at DB level.
+        postRepository.delete(post);
+    }
 }
