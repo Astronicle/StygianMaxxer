@@ -1,16 +1,18 @@
 package com.stygianMaxxer.controller;
 
 import com.stygianMaxxer.dto.PostCreateRequest;
+import com.stygianMaxxer.dto.PostRateRequest;
 import com.stygianMaxxer.dto.PostResponse;
 import com.stygianMaxxer.dto.PostSummaryResponse;
-import com.stygianMaxxer.dto.PostRateRequest;
 import com.stygianMaxxer.dto.RatingSummaryResponse;
+import com.stygianMaxxer.security.AuthPrincipal;
 import com.stygianMaxxer.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,8 +24,11 @@ public class PostController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PostResponse createPost(@Valid @RequestBody PostCreateRequest request) {
-        return postService.createPost(request);
+    public PostResponse createPost(
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @Valid @RequestBody PostCreateRequest request
+    ) {
+        return postService.createPost(principal.accountId(), request);
     }
 
     @GetMapping("/{postId}")
@@ -38,8 +43,12 @@ public class PostController {
 
     @PostMapping("/{postId}/rate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void ratePost(@PathVariable Integer postId, @Valid @RequestBody PostRateRequest request) {
-        postService.ratePost(postId, request);
+    public void ratePost(
+            @PathVariable Integer postId,
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @Valid @RequestBody PostRateRequest request
+    ) {
+        postService.ratePost(postId, principal.accountId(), request);
     }
 
     @GetMapping("/{postId}/rating-summary")

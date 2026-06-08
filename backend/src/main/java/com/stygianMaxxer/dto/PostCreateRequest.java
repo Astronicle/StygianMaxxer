@@ -7,9 +7,6 @@ import java.util.List;
 public record PostCreateRequest(
 
         @NotNull
-        Integer accountId,
-
-        @NotNull
         Short stygianId,
 
         @NotBlank

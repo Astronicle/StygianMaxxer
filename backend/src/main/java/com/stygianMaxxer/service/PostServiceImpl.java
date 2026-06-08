@@ -26,13 +26,13 @@ public class PostServiceImpl implements PostService {
      */
     @Override
     @Transactional
-    public PostResponse createPost(PostCreateRequest request) {
+    public PostResponse createPost(Integer accountId, PostCreateRequest request) {
 
-        Account account = accountRepository.findById(request.accountId())
-                .orElseThrow();
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Account not found: " + accountId));
 
         Stygian stygian = stygianRepository.findById(request.stygianId())
-                .orElseThrow();
+                .orElseThrow(() -> new java.util.NoSuchElementException("Stygian not found: " + request.stygianId()));
 
         Post post = Post.builder()
                 .account(account)
@@ -50,7 +50,7 @@ public class PostServiceImpl implements PostService {
         request.bosses().forEach(bossReq -> {
 
             Boss boss = bossRepository.findById(bossReq.bossId())
-                    .orElseThrow();
+                    .orElseThrow(() -> new java.util.NoSuchElementException("Boss not found: " + bossReq.bossId()));
 
             PostBoss postBoss = PostBoss.builder()
                     .boss(boss)
@@ -60,7 +60,7 @@ public class PostServiceImpl implements PostService {
             bossReq.characters().forEach(charReq -> {
 
                 Character character = characterRepository.findById(charReq.charId())
-                        .orElseThrow();
+                        .orElseThrow(() -> new java.util.NoSuchElementException("Character not found: " + charReq.charId()));
 
                 PostBossCharacter pbc = PostBossCharacter.builder()
                         .character(character)
@@ -87,9 +87,8 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public PostResponse getPost(Integer postId) {
-
         Post post = postRepository.findWithGraphByPostId(postId)
-                .orElseThrow();
+                .orElseThrow(() -> new java.util.NoSuchElementException("Post not found: " + postId));
 
         return PostMapper.toResponse(post);
     }
@@ -102,28 +101,25 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void ratePost(Integer postId, PostRateRequest request) {
-        // Guard in service layer as an extra safety net
-        short value = request.rating();
-        if (value < 1 || value > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5");
-        }
+    public void ratePost(Integer postId, Integer accountId, PostRateRequest request) {
 
-        PostRatingId id = new PostRatingId(postId, request.accountId());
+        PostRatingId id = new PostRatingId(postId, accountId);
         PostRating postRating = postRatingRepository.findById(id).orElse(null);
 
         if (postRating == null) {
-            Post post = postRepository.findById(postId).orElseThrow();
-            Account account = accountRepository.findById(request.accountId()).orElseThrow();
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new java.util.NoSuchElementException("Post not found: " + postId));
+            Account account = accountRepository.findById(accountId)
+                    .orElseThrow(() -> new java.util.NoSuchElementException("Account not found: " + accountId));
 
             postRating = PostRating.builder()
                     .id(id)
                     .post(post)
                     .account(account)
-                    .rating(value)
+                    .rating(request.rating())
                     .build();
         } else {
-            postRating.setRating(value);
+            postRating.setRating(request.rating());
         }
 
         postRatingRepository.save(postRating);
