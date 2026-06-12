@@ -38,8 +38,32 @@ public class PostController {
     }
 
     @GetMapping
-    public Page<PostSummaryResponse> getPosts(Pageable pageable) {
-        return postService.getPosts(pageable);
+    public Page<PostSummaryResponse> getPosts(
+            @RequestParam(required = false) Short stygianId,
+            @RequestParam(required = false) Integer accountId,
+            @RequestParam(required = false) Short bossId,
+            @RequestParam(required = false) Short charId,
+            Pageable pageable
+    ) {
+        return postService.getPosts(stygianId, accountId, bossId, charId, pageable);
+    }
+
+    @PatchMapping("/{postId}")
+    public PostResponse updatePost(
+            @PathVariable Integer postId,
+            @AuthenticationPrincipal AuthPrincipal principal,
+            @RequestBody PostUpdateRequest request
+    ) {
+        return postService.updatePost(postId, principal.accountId(), request);
+    }
+
+    @DeleteMapping("/{postId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePost(
+            @PathVariable Integer postId,
+            @AuthenticationPrincipal AuthPrincipal principal
+    ) {
+        postService.deletePost(postId, principal.accountId());
     }
 
     @PostMapping("/{postId}/rate")
@@ -55,44 +79,5 @@ public class PostController {
     @GetMapping("/{postId}/rating-summary")
     public RatingSummaryResponse getRatingSummary(@PathVariable Integer postId) {
         return postService.getRatingSummary(postId);
-    }
-
-    /**
-     * PUT /api/posts/{postId}
-     *
-     * Partially update a post owned by the authenticated user.
-     * Any field left null in the request body keeps its current value.
-     * If {@code bosses} is provided it fully replaces the existing boss list.
-     *
-     * Returns 200 OK with the updated PostResponse.
-     * Returns 404 if the post does not exist (GlobalExceptionHandler maps NoSuchElementException).
-     * Returns 400 if the authenticated user does not own the post (GlobalExceptionHandler maps IllegalArgumentException).
-     */
-    @PutMapping("/{postId}")
-    public PostResponse updatePost(
-            @PathVariable Integer postId,
-            @AuthenticationPrincipal AuthPrincipal principal,
-            @Valid @RequestBody PostUpdateRequest request
-    ) {
-        return postService.updatePost(postId, principal.accountId(), request);
-    }
-
-    /**
-     * DELETE /api/posts/{postId}
-     *
-     * Permanently delete a post owned by the authenticated user.
-     * All child rows (PostBoss, PostBossCharacter, PostRating) are removed via cascade.
-     *
-     * Returns 204 No Content on success.
-     * Returns 404 if the post does not exist.
-     * Returns 400 if the authenticated user does not own the post.
-     */
-    @DeleteMapping("/{postId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePost(
-            @PathVariable Integer postId,
-            @AuthenticationPrincipal AuthPrincipal principal
-    ) {
-        postService.deletePost(postId, principal.accountId());
     }
 }
