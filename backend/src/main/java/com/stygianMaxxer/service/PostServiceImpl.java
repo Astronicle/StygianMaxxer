@@ -65,7 +65,16 @@ public class PostServiceImpl implements PostService {
                     .buildInfo(bossReq.buildInfo())
                     .build();
 
+            // Track char ids per boss to catch duplicates before hitting the DB
+            java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
+
             bossReq.characters().forEach(charReq -> {
+
+                if (!seenCharIds.add(charReq.charId())) {
+                    throw new IllegalArgumentException(
+                            "Duplicate character id " + charReq.charId() + " in the same boss team"
+                    );
+                }
 
                 Character character = characterRepository.findById(charReq.charId())
                         .orElseThrow(() -> new NoSuchElementException("Character not found: " + charReq.charId()));

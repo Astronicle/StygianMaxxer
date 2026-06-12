@@ -1,6 +1,7 @@
 package com.stygianMaxxer.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;
@@ -13,6 +14,10 @@ import java.util.Objects;
 @AllArgsConstructor
 public class PostBossCharacterId implements Serializable {
 
+    /*
+        PK matches the DB: PRIMARY KEY (post_boss_id, slot)
+        One character per slot per boss team.
+     */
     @Column(name = "post_boss_id")
     private Long postBossId;
 
