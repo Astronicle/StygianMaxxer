@@ -4,6 +4,7 @@ import com.stygianMaxxer.dto.*;
 import com.stygianMaxxer.model.*;
 import com.stygianMaxxer.model.Character;
 import com.stygianMaxxer.repository.*;
+import com.stygianMaxxer.repository.StygianBossRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ public class PostServiceImpl implements PostService {
     private final AccountRepository accountRepository;
     private final StygianRepository stygianRepository;
     private final BossRepository bossRepository;
+    private final StygianBossRepository stygianBossRepository;
     private final CharacterRepository characterRepository;
     private final PostRatingRepository postRatingRepository;
 
@@ -50,6 +52,13 @@ public class PostServiceImpl implements PostService {
 
             Boss boss = bossRepository.findById(bossReq.bossId())
                     .orElseThrow(() -> new NoSuchElementException("Boss not found: " + bossReq.bossId()));
+
+            // Ensure this boss actually belongs to the selected stygian
+            if (!stygianBossRepository.existsByStygian_IdAndBoss_Id(stygian.getId(), boss.getId())) {
+                throw new IllegalArgumentException(
+                        "Boss '" + boss.getName() + "' does not belong to stygian '" + stygian.getName() + "'"
+                );
+            }
 
             PostBoss postBoss = PostBoss.builder()
                     .boss(boss)
