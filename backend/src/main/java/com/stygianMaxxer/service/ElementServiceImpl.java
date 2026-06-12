@@ -5,11 +5,14 @@ import com.stygianMaxxer.model.Element;
 import com.stygianMaxxer.repository.ElementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)  // fix #11 — was missing entirely
 public class ElementServiceImpl implements ElementService {
 
     private final ElementRepository elementRepository;
@@ -25,7 +28,7 @@ public class ElementServiceImpl implements ElementService {
     @Override
     public ElementResponse getBySlug(String slug) {
         Element element = elementRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Element not found"));
+                .orElseThrow(() -> new NoSuchElementException("Element not found: " + slug));
 
         return toDto(element);
     }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class BossServiceImpl implements BossService {
     @Override
     public BossResponse getBySlug(String slug) {
         Boss boss = bossRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Boss not found"));
+                .orElseThrow(() -> new NoSuchElementException("Boss not found: " + slug));
 
         return toDto(boss);
     }

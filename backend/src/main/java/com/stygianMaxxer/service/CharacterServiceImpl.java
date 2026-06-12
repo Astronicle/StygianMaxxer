@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Override
     public CharacterResponse getBySlug(String slug) {
         Character character = characterRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Character not found"));
+                .orElseThrow(() -> new NoSuchElementException("Character not found: " + slug));
 
         return toDto(character);
     }
