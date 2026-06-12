@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -33,11 +34,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String auth = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        // No token — let the request through unauthenticated.
+        // Spring Security will reject it at the endpoint level if auth is required.
         if (auth == null || !auth.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Token present but invalid — short-circuit with 401 immediately.
+        // Don't continue the filter chain; a bad token is never just "unauthenticated".
         String token = auth.substring("Bearer ".length()).trim();
 
         try {
@@ -55,11 +61,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
         } catch (Exception ex) {
             SecurityContextHolder.clearContext();
-            // You can optionally short-circuit here with 401. For now we just leave it unauthenticated.
+            sendUnauthorized(response, "Invalid or expired token");
+            return;  // stop the filter chain — don't process the request further
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write("""
+                {"status":401,"error":"Unauthorized","message":"%s"}
+                """.formatted(message));
     }
 }
