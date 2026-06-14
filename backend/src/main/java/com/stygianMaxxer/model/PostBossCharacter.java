@@ -16,10 +16,7 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor  // required by JPA
-// @AllArgsConstructor removed — it generated a constructor taking `id` as a
-// parameter, conflicting with how @Builder + setSlot() are used together.
-// The builder leaves id null, then setSlot() initialises it — using
-// @AllArgsConstructor directly would bypass that and allow a mis-constructed entity.
+@AllArgsConstructor
 @Builder
 public class PostBossCharacter {
 
@@ -41,18 +38,14 @@ public class PostBossCharacter {
     @Column(name = "cons", nullable = false)
     private short cons;
 
-    /**
-     * Always call this after building — it initialises the embedded PK.
-     * Without it the entity has a null id and JPA will throw at flush time.
-     */
+    public short getSlot() {
+        return id != null ? id.getSlot() : 0;
+    }
+
     public void setSlot(short slot) {
         if (this.id == null) {
             this.id = new PostBossCharacterId();
         }
         this.id.setSlot(slot);
-    }
-
-    public short getSlot() {
-        return id != null ? id.getSlot() : 0;
     }
 }

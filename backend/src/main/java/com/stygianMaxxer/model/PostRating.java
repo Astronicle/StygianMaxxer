@@ -15,17 +15,11 @@ public class PostRating {
     @EmbeddedId
     private PostRatingId id;
 
-    /*
-        Maps post_id from composite key
-     */
     @MapsId("postId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    /*
-        Maps account_id from composite key
-     */
     @MapsId("accountId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false)

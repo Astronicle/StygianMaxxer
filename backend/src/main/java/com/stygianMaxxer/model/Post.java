@@ -21,19 +21,10 @@ public class Post {
     @Column(name = "post_id")
     private Integer postId;
 
-    /*
-        FK → account(account_id)
-        You already have Account entity.
-        This is NOT part of aggregate graph logic,
-        so simple ManyToOne is correct.
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    /*
-        FK → stygian(stygian_id)
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "stygian_id", nullable = false)
     private Stygian stygian;
@@ -53,18 +44,13 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    /*
-        Aggregate boundary:
-        Post → PostBoss (1–3)
-     */
     @OneToMany(
             mappedBy = "post",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @Builder.Default
     private List<PostBoss> bosses = new ArrayList<>();
-
-    /* ===== Helper Methods (CRITICAL) ===== */
 
     public void addBoss(PostBoss boss) {
         bosses.add(boss);

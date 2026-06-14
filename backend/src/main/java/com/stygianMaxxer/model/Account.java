@@ -28,9 +28,6 @@ public class Account {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    /*
-        FK → character(char_id), ON DELETE SET NULL
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "avatar_char_id")
     private Character avatarCharacter;

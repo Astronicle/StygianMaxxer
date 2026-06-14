@@ -7,8 +7,8 @@ import com.stygianMaxxer.security.SecurityConfig;
 import com.stygianMaxxer.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -28,8 +28,8 @@ class GlobalExceptionHandlerTest {
 
     @Autowired MockMvc mockMvc;
 
-    @MockBean PostService postService;
-    @MockBean JwtService jwtService;   // needed by JwtAuthFilter
+    @MockitoBean PostService postService;
+    @MockitoBean JwtService jwtService;   // needed by JwtAuthFilter
 
     // ── 404 from NoSuchElementException ──────────────────────────────────────
 
