@@ -1,5 +1,6 @@
 import { mockBossBrowse } from "@/app/lib/mock/bossBrowse";
 import BossBrowseCard from "@/app/components/bossBrowse/BossBrowseCard";
+import Link from "next/link";
 
 export default function BossBrowsePage() {
   return (
@@ -13,7 +14,9 @@ export default function BossBrowsePage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {mockBossBrowse.map((boss) => (
-          <BossBrowseCard key={boss.id} {...boss} />
+          <Link key={boss.id} href={`/boss/${boss.id}`}>
+            <BossBrowseCard {...boss} />
+          </Link>
         ))}
       </div>
     </div>

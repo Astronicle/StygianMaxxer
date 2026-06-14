@@ -1,5 +1,6 @@
 import { mockPostBrowse } from "@/app/lib/mock/postBrowse";
 import PostBrowseCard from "@/app/components/postBrowse/PostBrowseCard";
+import Link from "next/link";
 
 export default function PostBrowsePage() {
   return (
@@ -13,7 +14,9 @@ export default function PostBrowsePage() {
 
       <div className="flex gap-4 overflow-x-auto pb-2">
         {mockPostBrowse.map((post) => (
-          <PostBrowseCard key={post.postID} {...post} />
+          <Link key={post.postID} href={`/post/${post.postID}`}>
+            <PostBrowseCard {...post} />
+          </Link>
         ))}
       </div>
     </div>

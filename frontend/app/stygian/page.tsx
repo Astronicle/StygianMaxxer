@@ -1,5 +1,6 @@
 import { mockStygianBrowse } from "@/app/lib/mock/stygianBrowse";
 import StygianBrowseCard from "@/app/components/stygianBrowse/StygianBrowseCard";
+import Link from "next/link";
 
 export default function StygianBrowsePage() {
   return (
@@ -18,10 +19,9 @@ export default function StygianBrowsePage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockStygianBrowse.map((stygian) => (
-            <StygianBrowseCard
-              key={stygian.stygianID}
-              {...stygian}
-            />
+            <Link key={stygian.stygianID} href={`/stygian/${stygian.stygianID}`}>
+              <StygianBrowseCard {...stygian} />
+            </Link>
           ))}
         </div>
       )}
