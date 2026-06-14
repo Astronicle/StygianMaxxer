@@ -92,7 +92,9 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(patch("/api/posts/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"title": "new title"}"""))
+                        .content("""
+                                {"title": "new title"}
+                                """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.error").value("Conflict"))

@@ -2,23 +2,20 @@ package com.stygianMaxxer.dto;
 
 import com.stygianMaxxer.model.Account;
 import com.stygianMaxxer.model.Boss;
+import com.stygianMaxxer.model.Character;
 import com.stygianMaxxer.model.Post;
 import com.stygianMaxxer.model.PostBoss;
 import com.stygianMaxxer.model.PostBossCharacter;
 import com.stygianMaxxer.model.Stygian;
-import com.stygianMaxxer.model.Character;
 
 import java.util.List;
 
 public final class PostMapper {
 
-    private PostMapper() {
-    }
+    private PostMapper() {}
 
     public static PostResponse toResponse(Post post) {
-        if (post == null) {
-            return null;
-        }
+        if (post == null) return null;
 
         Account account = post.getAccount();
         Stygian stygian = post.getStygian();
@@ -29,17 +26,11 @@ public final class PostMapper {
 
         StygianSummary stygianSummary = stygian == null
                 ? null
-                : new StygianSummary(
-                        stygian.getId(),
-                        stygian.getName(),
-                        stygian.getVersion()
-                );
+                : new StygianSummary(stygian.getId(), stygian.getName(), stygian.getVersion());
 
         List<PostBossResponse> bossResponses = post.getBosses() == null
                 ? List.of()
-                : post.getBosses().stream()
-                    .map(PostMapper::toBossResponse)
-                    .toList();
+                : post.getBosses().stream().map(PostMapper::toBossResponse).toList();
 
         return new PostResponse(
                 post.getPostId(),
@@ -55,22 +46,20 @@ public final class PostMapper {
     }
 
     private static PostBossResponse toBossResponse(PostBoss postBoss) {
-        if (postBoss == null) {
-            return null;
-        }
+        if (postBoss == null) return null;
 
         Boss boss = postBoss.getBoss();
-        Short bossId = boss != null ? boss.getId() : null;
-        String bossName = boss != null ? boss.getName() : null;
+        Short bossId     = boss != null ? boss.getId()   : null;
+        String bossSlug  = boss != null ? boss.getSlug() : null;  // added
+        String bossName  = boss != null ? boss.getName() : null;
 
         List<PostBossCharacterResponse> characters = postBoss.getCharacters() == null
                 ? List.of()
-                : postBoss.getCharacters().stream()
-                    .map(PostMapper::toBossCharacterResponse)
-                    .toList();
+                : postBoss.getCharacters().stream().map(PostMapper::toBossCharacterResponse).toList();
 
         return new PostBossResponse(
                 bossId,
+                bossSlug,   // new field
                 bossName,
                 postBoss.getBuildInfo(),
                 characters
@@ -78,12 +67,10 @@ public final class PostMapper {
     }
 
     private static PostBossCharacterResponse toBossCharacterResponse(PostBossCharacter pbc) {
-        if (pbc == null) {
-            return null;
-        }
+        if (pbc == null) return null;
 
         Character character = pbc.getCharacter();
-        Short charId = character != null ? character.getId() : null;
+        Short  charId   = character != null ? character.getId()   : null;
         String charName = character != null ? character.getName() : null;
 
         return new PostBossCharacterResponse(

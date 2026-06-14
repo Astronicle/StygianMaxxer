@@ -7,13 +7,15 @@ public record PostBossCharacterCreateRequest(
         @NotNull
         Short charId,
 
+        @NotNull
         @Min(1)
         @Max(4)
-        short slot,
+        Short slot,     // boxed so @Min/@Max actually fire
 
         boolean hasSig,
 
+        @NotNull
         @Min(0)
         @Max(6)
-        short cons
+        Short cons      // boxed so @Min/@Max actually fire
 ) {}

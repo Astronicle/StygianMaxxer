@@ -5,6 +5,7 @@ import com.stygianMaxxer.dto.LoginRequest;
 import com.stygianMaxxer.dto.RegisterRequest;
 import com.stygianMaxxer.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +19,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)   // 201 not 200 — a new resource was created
     public AuthResponse register(@RequestBody @Valid RegisterRequest req) {
         return authService.register(req);
     }

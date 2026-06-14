@@ -1,5 +1,6 @@
 package com.stygianMaxxer.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,15 +13,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── 400 Bad Request ──────────────────────────────────────────────────────
+    // ── 400 Bad Request ───────────────────────────────────────────────────────
 
-    /**
-     * Fired when @Valid fails on a @RequestBody.
-     * Returns a map of field → error message so the client knows exactly what's wrong.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = ex.getBindingResult().getFieldErrors()
@@ -28,7 +26,6 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toMap(
                         FieldError::getField,
                         fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value",
-                        // keep first message if there are multiple errors on same field
                         (a, b) -> a
                 ));
 
@@ -41,10 +38,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    /**
-     * Thrown by AuthService when username/email is already taken,
-     * or by PostService when a rating value is out of range, etc.
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity
@@ -58,10 +51,6 @@ public class GlobalExceptionHandler {
 
     // ── 404 Not Found ─────────────────────────────────────────────────────────
 
-    /**
-     * Thrown by orElseThrow() when an entity isn't found.
-     * Services should throw this (or a custom NotFoundException) instead of RuntimeException.
-     */
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NoSuchElementException ex) {
         String message = ex.getMessage() != null ? ex.getMessage() : "Resource not found";
@@ -76,10 +65,6 @@ public class GlobalExceptionHandler {
 
     // ── 409 Conflict ──────────────────────────────────────────────────────────
 
-    /**
-     * Use this for duplicate-resource situations (username taken, etc.)
-     * Once you introduce a dedicated ConflictException, wire it here.
-     */
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleConflict(IllegalStateException ex) {
         return ResponseEntity
@@ -91,12 +76,11 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    // ── 500 Fallback ─────────────────────────────────────────────────────────
+    // ── 500 Fallback ──────────────────────────────────────────────────────────
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
-        // Log the real error server-side but don't expose internals to the client
-        ex.printStackTrace(); // swap for a proper logger (e.g. log.error(..., ex))
+        log.error("Unhandled exception", ex);  // structured log with full stack trace
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(
@@ -114,7 +98,6 @@ public class GlobalExceptionHandler {
             String message,
             OffsetDateTime timestamp
     ) {
-        // Convenience constructor — timestamp is always now
         public ErrorResponse(int status, String error, String message) {
             this(status, error, message, OffsetDateTime.now());
         }

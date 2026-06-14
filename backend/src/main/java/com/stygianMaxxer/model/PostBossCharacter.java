@@ -15,25 +15,22 @@ import lombok.*;
 )
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor  // required by JPA
+// @AllArgsConstructor removed — it generated a constructor taking `id` as a
+// parameter, conflicting with how @Builder + setSlot() are used together.
+// The builder leaves id null, then setSlot() initialises it — using
+// @AllArgsConstructor directly would bypass that and allow a mis-constructed entity.
 @Builder
 public class PostBossCharacter {
 
     @EmbeddedId
     private PostBossCharacterId id;
 
-    /*
-        Maps post_boss_id from composite key
-     */
     @MapsId("postBossId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_boss_id", nullable = false)
     private PostBoss postBoss;
 
-    /*
-        FK → character(char_id)
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "char_id", nullable = false)
     private Character character;
@@ -44,17 +41,18 @@ public class PostBossCharacter {
     @Column(name = "cons", nullable = false)
     private short cons;
 
-    /*
-        Convenience getter for slot
+    /**
+     * Always call this after building — it initialises the embedded PK.
+     * Without it the entity has a null id and JPA will throw at flush time.
      */
-    public short getSlot() {
-        return id != null ? id.getSlot() : 0;
-    }
-
     public void setSlot(short slot) {
         if (this.id == null) {
             this.id = new PostBossCharacterId();
         }
         this.id.setSlot(slot);
+    }
+
+    public short getSlot() {
+        return id != null ? id.getSlot() : 0;
     }
 }

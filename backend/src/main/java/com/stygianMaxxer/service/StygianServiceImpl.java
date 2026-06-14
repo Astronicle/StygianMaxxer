@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -36,11 +35,12 @@ public class StygianServiceImpl implements StygianService {
 
         List<Stygian> stygians = stygianRepository.findAll();
 
-        // Load all stygian-boss rows in one shot, grouped by stygian id
+        // Load all stygian-boss rows with stygian + boss eagerly joined.
+        // Using findAll() here would trigger lazy proxy loads for each
+        // sb.getStygian().getId() call in the groupingBy — one query per row.
         Map<Short, List<StygianBoss>> bossesByStygian = stygianBossRepository
-                .findAll()
+                .findAllWithStygianAndBoss()
                 .stream()
-                .sorted(Comparator.comparing(StygianBoss::getSlot))
                 .collect(Collectors.groupingBy(sb -> sb.getStygian().getId()));
 
         return stygians.stream()

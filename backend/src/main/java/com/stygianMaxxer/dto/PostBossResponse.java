@@ -5,6 +5,7 @@ import java.util.List;
 public record PostBossResponse(
 
         Short bossId,
+        String bossSlug,   // added — useful for client-side routing
         String bossName,
         String buildInfo,
 
