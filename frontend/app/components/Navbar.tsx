@@ -17,13 +17,22 @@ function Navbar() {
           <div className="navbar-center hidden md:flex">
             <ul className="menu menu-horizontal px-1 gap-2">
               <li>
-                <Link href="/">Home</Link>
+                <Link href="/stygian">Stygians</Link>
               </li>
               <li>
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/boss">Bosses</Link>
+              </li>
+              <li>
+                <Link href="/post">Posts</Link>
+              </li>
+              <li>
+                <Link href="/user">Users</Link>
               </li>
               <li>
                 <Link href="/login">Login</Link>
+              </li>
+              <li>
+                <Link href="/signup">Sign Up</Link>
               </li>
             </ul>
           </div>
