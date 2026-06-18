@@ -36,7 +36,6 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   });
 
   if (!res.ok) {
-    // Try to extract backend error message
     let message = `API error ${res.status}`;
     try {
       const err = await res.json();
@@ -47,7 +46,6 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     throw new Error(message);
   }
 
-  // 204 No Content — nothing to parse
   if (res.status === 204) return undefined as T;
 
   return res.json() as Promise<T>;
@@ -75,4 +73,40 @@ export async function apiRegister(
     method: "POST",
     body: { username, email, password },
   });
+}
+
+// Account
+export interface AccountProfile {
+  accountId: number;
+  username: string;
+  email: string | null;
+  avatarCharId: number | null;
+  avatarCharName: string | null;
+  creationDate: string;
+}
+
+export async function apiGetMyProfile(): Promise<AccountProfile> {
+  return apiFetch<AccountProfile>("/api/accounts/me");
+}
+
+// Posts
+export interface PostSummary {
+  postId: number;
+  title: string;
+  username: string;
+  stygianName: string;
+  createdAt: string;
+  averageRating: number | null;
+  ratingCount: number;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number; // current page (0-indexed)
+}
+
+export async function apiGetMyPosts(accountId: number): Promise<Page<PostSummary>> {
+  return apiFetch<Page<PostSummary>>(`/api/posts?accountId=${accountId}&size=50`);
 }
