@@ -12,16 +12,17 @@ import PostHeader from "@/app/components/post/PostHeader";
 import VideoEmbed from "@/app/components/post/VideoEmbed";
 import BossCard from "@/app/components/post/BossCard";
 
-const ICON_BASE = process.env.NEXT_PUBLIC_ICON_BASE_URL ?? "";
+const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
+const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
 
 // Map a bossSlug/charName to the Supabase icon URL.
-// Boss icons live at: <ICON_BASE><bossSlug>.png  (same bucket the dashboard uses)
-// Char icons live at: <ICON_BASE>char/<charName>.png  — adjust the path if yours differs
+// Boss icons live at: <BOSS_ICON_BASE><bossSlug>.png  (same bucket the dashboard uses)
+// Char icons live at: <CHAR_ICON_BASE>char/<charName>.png  — adjust the path if yours differs
 function bossIcon(slug: string) {
-  return `${ICON_BASE}${slug}.png`;
+  return `${BOSS_ICON_BASE}/${slug}/model.webp`;
 }
 function charIcon(name: string) {
-  return `${ICON_BASE}char/${name}.png`;
+  return `${CHAR_ICON_BASE}/${name}/icon.webp`;
 }
 
 export default function PostPage() {
@@ -84,7 +85,7 @@ export default function PostPage() {
     characters: b.characters.map((c) => ({
       id: c.charId,
       name: c.charName,
-      icon: charIcon(c.charName),
+      icon: charIcon(c.charSlug),
       element: "",   // backend doesn't return element — add later if needed
       cons: c.cons,
       hasSig: c.hasSig,

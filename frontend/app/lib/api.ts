@@ -120,6 +120,7 @@ export async function apiGetMyPosts(accountId: number): Promise<Page<PostSummary
 export interface PostBossCharacter {
   charId: number;
   charName: string;
+  charSlug: string;
   slot: number;
   hasSig: boolean;
   cons: number;

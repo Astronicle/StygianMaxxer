@@ -49,9 +49,9 @@ public final class PostMapper {
         if (postBoss == null) return null;
 
         Boss boss = postBoss.getBoss();
-        Short bossId     = boss != null ? boss.getId()   : null;
-        String bossSlug  = boss != null ? boss.getSlug() : null;  // added
-        String bossName  = boss != null ? boss.getName() : null;
+        Short  bossId   = boss != null ? boss.getId()   : null;
+        String bossSlug = boss != null ? boss.getSlug() : null;
+        String bossName = boss != null ? boss.getName() : null;
 
         List<PostBossCharacterResponse> characters = postBoss.getCharacters() == null
                 ? List.of()
@@ -59,7 +59,7 @@ public final class PostMapper {
 
         return new PostBossResponse(
                 bossId,
-                bossSlug,   // new field
+                bossSlug,
                 bossName,
                 postBoss.getBuildInfo(),
                 characters
@@ -72,10 +72,12 @@ public final class PostMapper {
         Character character = pbc.getCharacter();
         Short  charId   = character != null ? character.getId()   : null;
         String charName = character != null ? character.getName() : null;
+        String charSlug = character != null ? character.getSlug() : null;
 
         return new PostBossCharacterResponse(
                 charId,
                 charName,
+                charSlug,
                 pbc.getSlot(),
                 pbc.isHasSig(),
                 pbc.getCons()
