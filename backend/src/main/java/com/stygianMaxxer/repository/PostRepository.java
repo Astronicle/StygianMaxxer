@@ -2,41 +2,51 @@ package com.stygianMaxxer.repository;
 
 import com.stygianMaxxer.dto.PostSummaryResponse;
 import com.stygianMaxxer.model.Post;
+import com.stygianMaxxer.model.PostBoss;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
-    /*
-        Fetch full aggregate in one query — avoids N+1.
-     */
-    @EntityGraph(attributePaths = {
-            "bosses",
-            "bosses.boss",
-            "bosses.characters",
-            "bosses.characters.character",
-            "account",
-            "stygian"
-    })
-    Optional<Post> findWithGraphByPostId(Integer postId);
+    // ── Query 1 ───────────────────────────────────────────────────────────────
+    // Fetches the Post row itself, plus its bosses list and the boss/account/
+    // stygian many-to-ones — everything EXCEPT characters.
+    // One LEFT JOIN per association, no Cartesian product problem because
+    // there is only one bag (bosses) being joined here.
+    @Query("""
+        SELECT DISTINCT p
+        FROM Post p
+        LEFT JOIN FETCH p.bosses pb
+        LEFT JOIN FETCH pb.boss
+        LEFT JOIN FETCH p.account
+        LEFT JOIN FETCH p.stygian
+        WHERE p.postId = :postId
+    """)
+    Optional<Post> findPostWithBosses(@Param("postId") Integer postId);
 
-    /*
-        Paginated list with optional filters.
+    // ── Query 2 ───────────────────────────────────────────────────────────────
+    // Given a list of PostBoss primary-key ids, fetches those PostBoss rows
+    // and eagerly joins their characters + the character many-to-one.
+    // Uses an IN clause so this is always exactly ONE query regardless of
+    // how many bosses the post has — not N+1.
+    @Query("""
+        SELECT DISTINCT pb
+        FROM PostBoss pb
+        LEFT JOIN FETCH pb.characters pbc
+        LEFT JOIN FETCH pbc.character
+        WHERE pb.postBossId IN :bossIds
+    """)
+    List<PostBoss> findBossesWithCharacters(@Param("bossIds") List<Long> bossIds);
 
-        All three filter params are optional — pass null to skip that filter.
-        Filters can be combined freely (e.g. stygianId + accountId together).
-
-        bossId filters via a subquery on PostBoss since Boss is nested one
-        level below Post. Character filtering works the same way.
-     */
+    // Paginated list
     @Query("""
         SELECT new com.stygianMaxxer.dto.PostSummaryResponse(
             p.postId,

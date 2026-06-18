@@ -1,43 +1,110 @@
-import { mockPost } from "@/app/lib/mock/post";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import {
+  apiGetPost,
+  apiGetPostRatingSummary,
+  type PostDetail,
+  type RatingSummary,
+} from "@/app/lib/api";
 import PostHeader from "@/app/components/post/PostHeader";
 import VideoEmbed from "@/app/components/post/VideoEmbed";
 import BossCard from "@/app/components/post/BossCard";
 
-type PageProps = {
-  params: Promise<{
-    postID: string;
-  }>;
-};
+const ICON_BASE = process.env.NEXT_PUBLIC_ICON_BASE_URL ?? "";
 
-export default async function PostPage({ params }: PageProps) {
-  const { postID } = await params;
-  const numericPostID = Number(postID);
+// Map a bossSlug/charName to the Supabase icon URL.
+// Boss icons live at: <ICON_BASE><bossSlug>.png  (same bucket the dashboard uses)
+// Char icons live at: <ICON_BASE>char/<charName>.png  — adjust the path if yours differs
+function bossIcon(slug: string) {
+  return `${ICON_BASE}${slug}.png`;
+}
+function charIcon(name: string) {
+  return `${ICON_BASE}char/${name}.png`;
+}
 
-  const post = mockPost.find((p) => p.postID === numericPostID);
+export default function PostPage() {
+  const { postID } = useParams<{ postID: string }>();
+  const postId = Number(postID);
 
-  if (!post) {
+  const [post, setPost] = useState<PostDetail | null>(null);
+  const [rating, setRating] = useState<RatingSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        // Fetch the post and its rating summary in parallel
+        const [postData, ratingData] = await Promise.all([
+          apiGetPost(postId),
+          apiGetPostRatingSummary(postId),
+        ]);
+        setPost(postData);
+        setRating(ratingData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load post");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [postId]);
+
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <div className="alert alert-error">Post not found</div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <span className="loading loading-spinner loading-lg" />
       </div>
     );
   }
 
+  if (error || !post) {
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        <div className="alert alert-error">{error ?? "Post not found"}</div>
+      </div>
+    );
+  }
+
+  const headerProps = {
+    title: post.title,
+    description: post.description ?? "",
+    createdAt: post.createdAt,
+    author: { username: post.account.username },
+    rating: rating?.average ?? 0,
+  };
+
+  const bosses = post.bosses.map((b) => ({
+    id: b.bossId,
+    name: b.bossName,
+    icon: bossIcon(b.bossSlug),
+    buildInfo: b.buildInfo ?? undefined,
+    characters: b.characters.map((c) => ({
+      id: c.charId,
+      name: c.charName,
+      icon: charIcon(c.charName),
+      element: "",   // backend doesn't return element — add later if needed
+      cons: c.cons,
+      hasSig: c.hasSig,
+    })),
+  }));
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-10">
-      <PostHeader {...post} />
+      <PostHeader {...headerProps} />
 
       <div className="badge badge-outline">
-        Stygian Version {post.stygianAttempt.version}
+        {post.stygian.stygianName} {post.stygian.version}
       </div>
 
-      <VideoEmbed url={post.videoLink} />
+      {post.videoLink && <VideoEmbed url={post.videoLink} />}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Bosses</h2>
-
         <div className="grid gap-6">
-          {post.stygianAttempt.bosses.map((boss) => (
+          {bosses.map((boss) => (
             <BossCard key={boss.id} {...boss} />
           ))}
         </div>

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -53,7 +54,6 @@ public class PostServiceImpl implements PostService {
             Boss boss = bossRepository.findById(bossReq.bossId())
                     .orElseThrow(() -> new NoSuchElementException("Boss not found: " + bossReq.bossId()));
 
-            // Ensure this boss actually belongs to the selected stygian
             if (!stygianBossRepository.existsByStygian_IdAndBoss_Id(stygian.getId(), boss.getId())) {
                 throw new IllegalArgumentException(
                         "Boss '" + boss.getName() + "' does not belong to stygian '" + stygian.getName() + "'"
@@ -65,7 +65,6 @@ public class PostServiceImpl implements PostService {
                     .buildInfo(bossReq.buildInfo())
                     .build();
 
-            // Track char ids per boss to catch duplicates before hitting the DB
             java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
 
             bossReq.characters().forEach(charReq -> {
@@ -100,9 +99,29 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public PostResponse getPost(Integer postId) {
-        Post post = postRepository.findWithGraphByPostId(postId)
+
+        // Query 1: load Post + bosses (and their boss/account/stygian many-to-ones).
+        // Only ONE bag (bosses) is joined here, so Hibernate is happy.
+        Post post = postRepository.findPostWithBosses(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
 
+        // Collect the primary-key ids of every PostBoss that was just loaded.
+        List<Long> bossIds = post.getBosses()
+                .stream()
+                .map(PostBoss::getPostBossId)
+                .toList();
+
+        if (!bossIds.isEmpty()) {
+            // Query 2: load characters for ALL those bosses in one IN-clause query.
+            // The result list is discarded here because Hibernate's first-level cache
+            // (the session) already holds the PostBoss instances we loaded in Query 1.
+            // Hibernate automatically wires the freshly loaded characters back into
+            // the existing PostBoss objects in memory — no manual mapping needed.
+            postRepository.findBossesWithCharacters(bossIds);
+        }
+
+        // At this point post.getBosses() is fully populated:
+        // each PostBoss has its characters list filled in by the session cache.
         return PostMapper.toResponse(post);
     }
 
@@ -124,15 +143,14 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PostResponse updatePost(Integer postId, Integer accountId, PostUpdateRequest request) {
 
-        Post post = postRepository.findWithGraphByPostId(postId)
+        // updatePost also used findWithGraphByPostId before — same fix applied here.
+        Post post = postRepository.findPostWithBosses(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
 
-        // Only the author can edit their own post
         if (!post.getAccount().getAccountId().equals(accountId)) {
             throw new IllegalStateException("You do not have permission to edit this post");
         }
 
-        // Only apply fields that were actually sent (null = don't touch)
         if (request.title() != null) {
             if (request.title().isBlank()) throw new IllegalArgumentException("Title must not be blank");
             post.setPostTitle(request.title());
@@ -160,7 +178,6 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
 
-        // Only the author can delete their own post
         if (!post.getAccount().getAccountId().equals(accountId)) {
             throw new IllegalStateException("You do not have permission to delete this post");
         }

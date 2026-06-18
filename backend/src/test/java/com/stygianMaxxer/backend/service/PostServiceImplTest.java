@@ -11,6 +11,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -52,7 +54,7 @@ class PostServiceImplTest {
 
     @Test
     void getPost_notFound_throwsNoSuchElement() {
-        when(postRepository.findWithGraphByPostId(99)).thenReturn(Optional.empty());
+        when(postRepository.findPostWithBosses(99)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> postService.getPost(99))
                 .isInstanceOf(NoSuchElementException.class)
@@ -63,7 +65,7 @@ class PostServiceImplTest {
 
     @Test
     void updatePost_notOwner_throwsIllegalState() {
-        when(postRepository.findWithGraphByPostId(10)).thenReturn(Optional.of(post));
+        when(postRepository.findPostWithBosses(10)).thenReturn(Optional.of(post));
 
         PostUpdateRequest req = new PostUpdateRequest("New title", null, null, null);
 
@@ -74,7 +76,7 @@ class PostServiceImplTest {
 
     @Test
     void updatePost_blankTitle_throwsIllegalArgument() {
-        when(postRepository.findWithGraphByPostId(10)).thenReturn(Optional.of(post));
+        when(postRepository.findPostWithBosses(10)).thenReturn(Optional.of(post));
 
         PostUpdateRequest req = new PostUpdateRequest("   ", null, null, null);
 
@@ -85,7 +87,7 @@ class PostServiceImplTest {
 
     @Test
     void updatePost_nullFields_onlyChangesProvidedFields() {
-        when(postRepository.findWithGraphByPostId(10)).thenReturn(Optional.of(post));
+        when(postRepository.findPostWithBosses(10)).thenReturn(Optional.of(post));
         when(postRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // Only update title, leave desc and videoLink null (don't touch)

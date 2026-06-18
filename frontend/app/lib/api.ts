@@ -107,6 +107,53 @@ export interface Page<T> {
   number: number; // current page (0-indexed)
 }
 
+// Public — no JWT required
+export async function apiGetPosts(page = 0, size = 12): Promise<Page<PostSummary>> {
+  return apiFetch<Page<PostSummary>>(`/api/posts?page=${page}&size=${size}`);
+}
+
+// My own posts filtered by accountId
 export async function apiGetMyPosts(accountId: number): Promise<Page<PostSummary>> {
   return apiFetch<Page<PostSummary>>(`/api/posts?accountId=${accountId}&size=50`);
+}
+// Post detail
+export interface PostBossCharacter {
+  charId: number;
+  charName: string;
+  slot: number;
+  hasSig: boolean;
+  cons: number;
+}
+
+export interface PostBoss {
+  bossId: number;
+  bossSlug: string;
+  bossName: string;
+  buildInfo: string | null;
+  characters: PostBossCharacter[];
+}
+
+export interface PostDetail {
+  postId: number;
+  title: string;
+  description: string | null;
+  videoLink: string | null;
+  createdAt: string;
+  updatedAt: string;
+  account: { accountId: number; username: string };
+  stygian: { stygianId: number; stygianName: string; version: string };
+  bosses: PostBoss[];
+}
+
+export interface RatingSummary {
+  average: number | null;
+  count: number;
+}
+
+export async function apiGetPost(postId: number): Promise<PostDetail> {
+  return apiFetch<PostDetail>(`/api/posts/${postId}`);
+}
+
+export async function apiGetPostRatingSummary(postId: number): Promise<RatingSummary> {
+  return apiFetch<RatingSummary>(`/api/posts/${postId}/rating-summary`);
 }
