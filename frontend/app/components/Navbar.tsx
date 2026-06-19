@@ -1,7 +1,32 @@
+"use client";
+
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getToken, AUTH_CHANGE_EVENT } from "../lib/api";
 
 function Navbar() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Set initial state on mount (client-only, since localStorage isn't
+    // available during SSR).
+    setIsLoggedIn(!!getToken());
+
+    // Keep in sync if the token changes anywhere in the app (login,
+    // logout, or 401-triggered clearToken on the dashboard).
+    function syncAuth() {
+      setIsLoggedIn(!!getToken());
+    }
+
+    window.addEventListener(AUTH_CHANGE_EVENT, syncAuth);
+    window.addEventListener("storage", syncAuth); // cross-tab sync
+
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, syncAuth);
+      window.removeEventListener("storage", syncAuth);
+    };
+  }, []);
+
   return (
     <>
       <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2">
@@ -28,12 +53,20 @@ function Navbar() {
               <li>
                 <Link href="/user">Users</Link>
               </li>
-              <li>
-                <Link href="/login">Login</Link>
-              </li>
-              <li>
-                <Link href="/signup">Sign Up</Link>
-              </li>
+              {isLoggedIn ? (
+                <li>
+                  <Link href="/dashboard">Dashboard</Link>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <Link href="/login">Login</Link>
+                  </li>
+                  <li>
+                    <Link href="/signup">Sign Up</Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 

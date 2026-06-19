@@ -1,6 +1,10 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 // ─── Token helpers (localStorage) ────────────────────────────────────────────
+// Dispatched whenever the token is set/cleared so components (e.g. Navbar)
+// can update their auth state immediately without a full page reload.
+export const AUTH_CHANGE_EVENT = "smx_auth_change";
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("smx_token");
@@ -8,10 +12,12 @@ export function getToken(): string | null {
 
 export function setToken(token: string): void {
   localStorage.setItem("smx_token", token);
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
 export function clearToken(): void {
   localStorage.removeItem("smx_token");
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
