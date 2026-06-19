@@ -189,3 +189,50 @@ export async function apiRatePost(postId: number, score: number): Promise<void> 
     body: { score },
   });
 }
+
+// ─── Stygian ──────────────────────────────────────────────────────────────────
+// Backend DTOs: StygianBossResponse { bossId, bossSlug, bossName, slot }
+//               StygianResponse     { id, name, version, bosses: StygianBossResponse[] }
+
+export interface StygianBoss {
+  bossId: number;    // backend: short
+  bossSlug: string;  // used to build Supabase icon URL
+  bossName: string;
+  slot: number;      // which slot this boss occupies in the cycle
+}
+
+export interface Stygian {
+  id: number;        // backend: short
+  name: string;
+  version: string;   // e.g. "6.2"
+  bosses: StygianBoss[];
+}
+
+// GET /api/stygian  (public)
+export async function apiGetStygians(): Promise<Stygian[]> {
+  return apiFetch<Stygian[]>("/api/stygian");
+}
+
+// GET /api/stygian/{id}  (public)
+export async function apiGetStygian(id: number): Promise<Stygian> {
+  return apiFetch<Stygian>(`/api/stygian/${id}`);
+}
+
+// ─── Bosses (lookup) ──────────────────────────────────────────────────────────
+// Backend DTO: BossResponse { id: short, slug: String, name: String }
+
+export interface Boss {
+  id: number;    // backend: short
+  slug: string;  // used to build Supabase icon URL
+  name: string;
+}
+
+// GET /api/bosses  (public)
+export async function apiGetBosses(): Promise<Boss[]> {
+  return apiFetch<Boss[]>("/api/bosses");
+}
+
+// GET /api/bosses/{slug}  (public)
+export async function apiGetBoss(slug: string): Promise<Boss> {
+  return apiFetch<Boss>(`/api/bosses/${slug}`);
+}

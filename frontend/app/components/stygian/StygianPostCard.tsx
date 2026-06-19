@@ -1,62 +1,41 @@
-type Boss = {
-  id: number;
-  name: string;
-  icon: string;
-};
+import type { PostSummary } from "@/app/lib/api";
+
+// StygianPostCard — post card shown on the stygian detail page.
+// PostSummary from the backend: { postId, title, username, stygianName, createdAt, averageRating, ratingCount }
+// Note: PostSummary does NOT include boss icons — only the full PostDetail (from GET /api/posts/{id}) does.
+// So we show text boss info only here; the card links to the full post for details.
 
 type StygianPostCardProps = {
-  postID: number;
-  title: string;
-  description: string;
-  rating: number;
-  username: string;
-  createdAt: string;
-  bosses: Boss[];
+  post: PostSummary;
 };
 
-export default function StygianPostCard({
-  title,
-  description,
-  rating,
-  username,
-  createdAt,
-  bosses,
-}: StygianPostCardProps) {
-  return (
-    <div className="card bg-base-200 shadow-md">
-      <div className="card-body gap-3">
-        <h3 className="card-title text-lg">
-          {title}
-        </h3>
+export default function StygianPostCard({ post }: StygianPostCardProps) {
+  const formattedDate = new Date(post.createdAt).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
-        <p className="text-sm opacity-80 line-clamp-2">
-          {description}
-        </p>
+  return (
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+      <div className="card-body gap-3">
+        <h3 className="card-title text-lg line-clamp-1">{post.title}</h3>
+
+        {/* stygianName badge — confirms which cycle this post belongs to */}
+        <span className="badge badge-outline badge-sm">{post.stygianName}</span>
 
         <div className="flex flex-wrap gap-2 text-sm opacity-70">
-          <span>By {username}</span>
+          <span>By {post.username}</span>
           <span>•</span>
-          <span>⭐ {rating}/5</span>
-          <span>•</span>
-          <span>
-            {new Date(createdAt).toDateString()}
-          </span>
+          <span>{formattedDate}</span>
         </div>
 
-        <div className="flex gap-2 mt-2">
-          {bosses.map((boss) => (
-            <div
-              key={boss.id}
-              className="tooltip"
-              data-tip={boss.name}
-            >
-              <img
-                src={boss.icon}
-                alt={boss.name}
-                className="w-9 h-9 rounded-md object-cover"
-              />
-            </div>
-          ))}
+        <div className="flex items-center gap-1 text-sm mt-1">
+          <span>⭐</span>
+          <span className="font-medium">
+            {post.averageRating != null ? post.averageRating.toFixed(1) : "—"}
+          </span>
+          <span className="opacity-60">({post.ratingCount} ratings)</span>
         </div>
       </div>
     </div>
