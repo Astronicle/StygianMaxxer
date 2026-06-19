@@ -194,6 +194,40 @@ export async function apiGetPost(postId: number): Promise<PostDetail> {
   return apiFetch<PostDetail>(`/api/posts/${postId}`);
 }
 
+// DELETE /api/posts/{postId}  (requires JWT, owner only)
+export async function apiDeletePost(postId: number): Promise<void> {
+  return apiFetch<void>(`/api/posts/${postId}`, { method: "DELETE" });
+}
+
+// PostBossCharacter update shape (same as create)
+export interface PostBossUpdateEntry {
+  bossId: number;
+  buildInfo: string;
+  characters: {
+    charId: number;
+    slot: number;
+    hasSig: boolean;
+    cons: number;
+  }[];
+}
+
+// PATCH /api/posts/{postId}  (requires JWT, owner only)
+// All fields optional — only send what changed.
+export async function apiUpdatePost(
+  postId: number,
+  body: {
+    title?: string;
+    description?: string;
+    videoLink?: string;
+    bosses?: PostBossUpdateEntry[];
+  }
+): Promise<PostDetail> {
+  return apiFetch<PostDetail>(`/api/posts/${postId}`, {
+    method: "PATCH",
+    body,
+  });
+}
+
 // ─── Rating ───────────────────────────────────────────────────────────────────
 // Backend DTO: RatingSummaryResponse { average: Double, count: Long }
 export interface RatingSummary {

@@ -1,44 +1,124 @@
 // DashboardPostCard — one post tile on the user's dashboard.
 // createdAt is an ISO OffsetDateTime string from the backend (e.g. "2026-06-19T03:28:00+05:30").
-// The Date constructor handles ISO strings with timezone offsets natively.
+
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { apiDeletePost } from "@/app/lib/api";
 
 type DashboardPostCardProps = {
   postID: number;
   title: string;
-  description: string;   // we pass stygianName here
+  description: string;   // stygianName
   rating: number;        // averageRating, 0 if null
   createdAt: string;     // ISO OffsetDateTime string from backend
+  onDeleted?: (postId: number) => void;
 };
 
 export default function DashboardPostCard({
+  postID,
   title,
   description,
   rating,
   createdAt,
+  onDeleted,
 }: DashboardPostCardProps) {
-  // Format the ISO date string into something human-readable.
-  // new Date() handles OffsetDateTime strings like "2026-06-19T03:28:00+05:30" correctly.
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const formattedDate = new Date(createdAt).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
+  async function handleDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await apiDeletePost(postID);
+      setConfirming(false);
+      onDeleted?.(postID);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <div className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-      <div className="card-body gap-2">
-        <h3 className="card-title text-lg line-clamp-1">{title}</h3>
+    <>
+      <div className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="card-body gap-2">
+          {/* Title — clickable to post detail */}
+          <Link href={`/post/${postID}`} className="hover:underline">
+            <h3 className="card-title text-lg line-clamp-1">{title}</h3>
+          </Link>
 
-        {/* stygianName passed as description */}
-        <span className="badge badge-outline badge-sm">{description}</span>
+          {/* Stygian badge */}
+          <span className="badge badge-outline badge-sm">{description}</span>
 
-        <div className="flex items-center justify-between text-sm opacity-70 mt-1">
-          <span>{formattedDate}</span>
-          <span>
-            ⭐ {rating > 0 ? rating.toFixed(1) : "—"} / 5
-          </span>
+          <div className="flex items-center justify-between text-sm opacity-70 mt-1">
+            <span>{formattedDate}</span>
+            <span>⭐ {rating > 0 ? rating.toFixed(1) : "—"} / 5</span>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2 mt-2">
+            <Link href={`/post/${postID}/edit`} className="btn btn-xs btn-outline flex-1">
+              Edit
+            </Link>
+            <button
+              className="btn btn-xs btn-error btn-outline flex-1"
+              onClick={() => { setConfirming(true); setDeleteError(null); }}
+            >
+              Delete
+            </button>
+          </div>
+
+          {deleteError && (
+            <p className="text-error text-xs mt-1">{deleteError}</p>
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Confirm delete modal */}
+      {confirming && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Delete post?</h3>
+            <p className="py-3 opacity-70">
+              <span className="font-medium">{title}</span> will be permanently deleted.
+              This cannot be undone.
+            </p>
+            {deleteError && (
+              <div className="alert alert-error text-sm mb-3">{deleteError}</div>
+            )}
+            <div className="modal-action">
+              <button
+                className="btn btn-ghost"
+                onClick={() => { setConfirming(false); setDeleteError(null); }}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-error"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? <span className="loading loading-spinner loading-xs" /> : "Delete"}
+              </button>
+            </div>
+          </div>
+          {/* Backdrop closes the modal */}
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setConfirming(false)}>close</button>
+          </form>
+        </dialog>
+      )}
+    </>
   );
 }

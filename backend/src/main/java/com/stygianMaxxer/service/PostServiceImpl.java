@@ -164,6 +164,56 @@ public class PostServiceImpl implements PostService {
             post.setVideoLink(request.videoLink());
         }
 
+        // ── Optional boss replacement ─────────────────────────────────────────
+        // If the client sends a bosses list, fully replace the existing ones.
+        // orphanRemoval = true on Post.bosses means clearing the list deletes
+        // the old PostBoss (and their PostBossCharacter) rows automatically.
+        if (request.bosses() != null) {
+            post.getBosses().clear();
+
+            request.bosses().forEach(bossReq -> {
+
+                Boss boss = bossRepository.findById(bossReq.bossId())
+                        .orElseThrow(() -> new NoSuchElementException("Boss not found: " + bossReq.bossId()));
+
+                if (!stygianBossRepository.existsByStygian_IdAndBoss_Id(post.getStygian().getId(), boss.getId())) {
+                    throw new IllegalArgumentException(
+                            "Boss '" + boss.getName() + "' does not belong to stygian '" + post.getStygian().getName() + "'"
+                    );
+                }
+
+                PostBoss postBoss = PostBoss.builder()
+                        .boss(boss)
+                        .buildInfo(bossReq.buildInfo())
+                        .build();
+
+                java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
+
+                bossReq.characters().forEach(charReq -> {
+
+                    if (!seenCharIds.add(charReq.charId())) {
+                        throw new IllegalArgumentException(
+                                "Duplicate character id " + charReq.charId() + " in the same boss team"
+                        );
+                    }
+
+                    Character character = characterRepository.findById(charReq.charId())
+                            .orElseThrow(() -> new NoSuchElementException("Character not found: " + charReq.charId()));
+
+                    PostBossCharacter pbc = PostBossCharacter.builder()
+                            .character(character)
+                            .hasSig(charReq.hasSig())
+                            .cons(charReq.cons())
+                            .build();
+
+                    pbc.setSlot(charReq.slot());
+                    postBoss.addCharacter(pbc);
+                });
+
+                post.addBoss(postBoss);
+            });
+        }
+
         post.setUpdatedAt(OffsetDateTime.now());
 
         return PostMapper.toResponse(postRepository.save(post));

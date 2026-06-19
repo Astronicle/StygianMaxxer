@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   apiGetMyProfile,
   apiGetMyPosts,
@@ -102,15 +101,17 @@ export default function DashboardPage() {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (
-              <Link key={post.postId} href={`/post/${post.postId}`}>
-                <DashboardPostCard
-                  postID={post.postId}
-                  title={post.title}
-                  description={post.stygianName}
-                  rating={post.averageRating ?? 0}
-                  createdAt={post.createdAt}
-                />
-              </Link>
+              <DashboardPostCard
+                key={post.postId}
+                postID={post.postId}
+                title={post.title}
+                description={post.stygianName}
+                rating={post.averageRating ?? 0}
+                createdAt={post.createdAt}
+                onDeleted={(deletedId) =>
+                  setPosts((prev) => prev.filter((p) => p.postId !== deletedId))
+                }
+              />
             ))}
           </div>
         )}
