@@ -1,6 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
-// Token helpers (localStorage for now)
+// ─── Token helpers (localStorage) ────────────────────────────────────────────
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("smx_token");
@@ -14,7 +14,9 @@ export function clearToken(): void {
   localStorage.removeItem("smx_token");
 }
 
-// Core fetch wrapper
+// ─── Core fetch wrapper ───────────────────────────────────────────────────────
+// Automatically attaches the JWT Bearer token if one exists in localStorage.
+// Throws an Error with the backend's message on non-2xx responses.
 type FetchOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
 export async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
@@ -46,17 +48,20 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     throw new Error(message);
   }
 
+  // 204 No Content — nothing to parse
   if (res.status === 204) return undefined as T;
 
   return res.json() as Promise<T>;
 }
 
-// Auth API
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+// Backend DTO: AuthResponse { token: String, type: String }
 export interface AuthResponse {
   token: string;
-  type: string;
+  type: string;   // always "Bearer"
 }
 
+// POST /auth/login  → body: { usernameOrEmail, password }
 export async function apiLogin(usernameOrEmail: string, password: string): Promise<AuthResponse> {
   return apiFetch<AuthResponse>("/auth/login", {
     method: "POST",
@@ -64,6 +69,7 @@ export async function apiLogin(usernameOrEmail: string, password: string): Promi
   });
 }
 
+// POST /auth/register  → body: { username, email, password }
 export async function apiRegister(
   username: string,
   email: string,
@@ -75,60 +81,72 @@ export async function apiRegister(
   });
 }
 
-// Account
+// ─── Account ──────────────────────────────────────────────────────────────────
+// Backend DTO: AccountProfileResponse { accountId, username, email, avatarCharId, avatarCharName, creationDate }
 export interface AccountProfile {
   accountId: number;
   username: string;
-  email: string | null;
-  avatarCharId: number | null;
-  avatarCharName: string | null;
-  creationDate: string;
+  email: string | null;         // null on public profiles
+  avatarCharId: number | null;  // null if no avatar set
+  avatarCharName: string | null; // null if no avatar set
+  creationDate: string;         // ISO OffsetDateTime string
 }
 
+// GET /api/accounts/me  (requires JWT)
 export async function apiGetMyProfile(): Promise<AccountProfile> {
   return apiFetch<AccountProfile>("/api/accounts/me");
 }
 
-// Posts
+// GET /api/accounts/{accountId}  (public)
+export async function apiGetProfile(accountId: number): Promise<AccountProfile> {
+  return apiFetch<AccountProfile>(`/api/accounts/${accountId}`);
+}
+
+// ─── Posts — browse ───────────────────────────────────────────────────────────
+// Backend DTO: PostSummaryResponse { postId, title, username, stygianName, createdAt, averageRating, ratingCount }
 export interface PostSummary {
   postId: number;
   title: string;
   username: string;
   stygianName: string;
-  createdAt: string;
-  averageRating: number | null;
-  ratingCount: number;
+  createdAt: string;            // ISO OffsetDateTime string
+  averageRating: number | null; // null if no ratings yet
+  ratingCount: number;          // NOTE: backend returns Long — JS treats it as number fine
 }
 
+// Generic Spring Page wrapper
 export interface Page<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number; // current page (0-indexed)
+  number: number;               // current page, 0-indexed
 }
 
-// Public — no JWT required
+// GET /api/posts?page=&size=  (public)
 export async function apiGetPosts(page = 0, size = 12): Promise<Page<PostSummary>> {
   return apiFetch<Page<PostSummary>>(`/api/posts?page=${page}&size=${size}`);
 }
 
-// My own posts filtered by accountId
+// GET /api/posts?accountId=&size=50  — filtered to one user (requires JWT for own posts)
 export async function apiGetMyPosts(accountId: number): Promise<Page<PostSummary>> {
   return apiFetch<Page<PostSummary>>(`/api/posts?accountId=${accountId}&size=50`);
 }
-// Post detail
+
+// ─── Posts — detail ───────────────────────────────────────────────────────────
+// These mirror PostBossCharacterResponse, PostBossResponse, PostResponse from the backend.
+
 export interface PostBossCharacter {
-  charId: number;
+  charId: number;       // backend: Short
   charName: string;
-  charSlug: string;
-  slot: number;
-  hasSig: boolean;
-  cons: number;
+  charSlug: string;     // used to build Supabase icon URL
+  slot: number;         // which slot this character fills (1-based)
+  hasSig: boolean;      // has signature weapon
+  cons: number;         // constellation level
 }
 
 export interface PostBoss {
-  bossId: number;
-  bossSlug: string;
+  bossId: number;       // backend: Short
+  bossSlug: string;     // used to build Supabase icon URL
   bossName: string;
   buildInfo: string | null;
   characters: PostBossCharacter[];
@@ -146,15 +164,28 @@ export interface PostDetail {
   bosses: PostBoss[];
 }
 
-export interface RatingSummary {
-  average: number | null;
-  count: number;
-}
-
+// GET /api/posts/{postId}  (public)
 export async function apiGetPost(postId: number): Promise<PostDetail> {
   return apiFetch<PostDetail>(`/api/posts/${postId}`);
 }
 
+// ─── Rating ───────────────────────────────────────────────────────────────────
+// Backend DTO: RatingSummaryResponse { average: Double, count: Long }
+export interface RatingSummary {
+  average: number | null; // null if no ratings yet
+  count: number;
+}
+
+// GET /api/posts/{postId}/rating-summary  (public)
 export async function apiGetPostRatingSummary(postId: number): Promise<RatingSummary> {
   return apiFetch<RatingSummary>(`/api/posts/${postId}/rating-summary`);
+}
+
+// POST /api/posts/{postId}/rate  (requires JWT)
+// score must be 1–5 per backend validation
+export async function apiRatePost(postId: number, score: number): Promise<void> {
+  return apiFetch<void>(`/api/posts/${postId}/rate`, {
+    method: "POST",
+    body: { score },
+  });
 }
