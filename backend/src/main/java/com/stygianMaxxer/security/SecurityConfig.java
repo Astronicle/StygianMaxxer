@@ -60,6 +60,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/characters/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/bosses/**").permitAll()
                         // Public account profile (not /me)
+                        .requestMatchers(HttpMethod.GET, "/api/accounts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/accounts/by-username/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/accounts/{accountId}").permitAll()
 
                         // ── Everything else requires a valid JWT ──────────────

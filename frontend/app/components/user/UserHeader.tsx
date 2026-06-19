@@ -3,15 +3,19 @@ type UserHeaderProps = {
   charIcon: string;
 };
 
-export default function UserHeader({
-  username,
-  charIcon,
-}: UserHeaderProps) {
+export default function UserHeader({ username, charIcon }: UserHeaderProps) {
   return (
     <div className="flex items-center gap-6">
       <div className="avatar">
         <div className="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-          <img src={charIcon} alt={username} />
+          <img
+            src={charIcon}
+            alt={username}
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.src = "/icon.png";
+            }}
+          />
         </div>
       </div>
 

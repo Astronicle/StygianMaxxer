@@ -3,6 +3,8 @@ type DashboardHeaderProps = {
   charIcon: string;
 };
 
+import Link from "next/link";
+
 export default function DashboardHeader({
   username,
   charIcon,
@@ -22,9 +24,11 @@ export default function DashboardHeader({
         </div>
       </div>
 
-      <button className="btn btn-primary">
-        + Create Post
-      </button>
+      <Link href="/post/create" className="btn btn-primary">
+        <button className="btn btn-primary">
+          + Create Post
+        </button>
+      </Link>
     </div>
   );
 }

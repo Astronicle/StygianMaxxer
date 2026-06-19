@@ -95,9 +95,6 @@ export default function DashboardPage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Your Posts</h2>
-          <Link href="/post/create" className="btn btn-sm btn-outline">
-            + Create Post
-          </Link>
         </div>
 
         {posts.length === 0 ? (

@@ -108,6 +108,25 @@ export async function apiGetProfile(accountId: number): Promise<AccountProfile> 
   return apiFetch<AccountProfile>(`/api/accounts/${accountId}`);
 }
 
+// GET /api/accounts/by-username/{username}  (public)
+export async function apiGetProfileByUsername(username: string): Promise<AccountProfile> {
+  return apiFetch<AccountProfile>(`/api/accounts/by-username/${encodeURIComponent(username)}`);
+}
+
+// Backend DTO: AccountSummaryResponse { accountId, username, avatarCharId, avatarCharName }
+// Lightweight shape used for the user browse list.
+export interface AccountSummary {
+  accountId: number;
+  username: string;
+  avatarCharId: number | null;
+  avatarCharName: string | null;
+}
+
+// GET /api/accounts?page=&size=  (public)
+export async function apiGetAccounts(page = 0, size = 24): Promise<Page<AccountSummary>> {
+  return apiFetch<Page<AccountSummary>>(`/api/accounts?page=${page}&size=${size}`);
+}
+
 // ─── Posts — browse ───────────────────────────────────────────────────────────
 // Backend DTO: PostSummaryResponse { postId, title, username, stygianName, createdAt, averageRating, ratingCount }
 export interface PostSummary {
@@ -194,6 +213,13 @@ export async function apiRatePost(postId: number, score: number): Promise<void> 
     method: "POST",
     body: { score },
   });
+}
+
+// GET /api/posts/{postId}/bosses  (public)
+// Lightweight list of bosses killed in a post — { id, slug, name } each.
+// Used to render boss icons on post summary cards (e.g. user profile).
+export async function apiGetPostBosses(postId: number): Promise<Boss[]> {
+  return apiFetch<Boss[]>(`/api/posts/${postId}/bosses`);
 }
 
 // ─── Stygian ──────────────────────────────────────────────────────────────────

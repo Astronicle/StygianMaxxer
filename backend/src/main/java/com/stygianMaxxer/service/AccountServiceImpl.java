@@ -1,12 +1,15 @@
 package com.stygianMaxxer.service;
 
 import com.stygianMaxxer.dto.AccountProfileResponse;
+import com.stygianMaxxer.dto.AccountSummaryResponse;
 import com.stygianMaxxer.dto.AccountUpdateRequest;
 import com.stygianMaxxer.model.Account;
 import com.stygianMaxxer.model.Character;
 import com.stygianMaxxer.repository.AccountRepository;
 import com.stygianMaxxer.repository.CharacterRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,17 @@ public class AccountServiceImpl implements AccountService {
     public AccountProfileResponse getProfile(Integer accountId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new NoSuchElementException("Account not found: " + accountId));
+
+        return toResponse(account, false);
+    }
+
+    //Public profile by username
+
+    @Override
+    @Transactional(readOnly = true)
+    public AccountProfileResponse getProfileByUsername(String username) {
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("Account not found: " + username));
 
         return toResponse(account, false);
     }
@@ -81,6 +95,14 @@ public class AccountServiceImpl implements AccountService {
         return toResponse(accountRepository.save(account), true);
     }
 
+    //Browse list
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AccountSummaryResponse> getAllAccounts(Pageable pageable) {
+        return accountRepository.findAll(pageable).map(this::toSummary);
+    }
+
     //Mapper
 
     private AccountProfileResponse toResponse(Account account, boolean includeEmail) {
@@ -92,6 +114,16 @@ public class AccountServiceImpl implements AccountService {
                 avatar != null ? avatar.getId() : null,     // Short
                 avatar != null ? avatar.getName() : null,   // confirmed: field is `name`
                 account.getCreationDate()
+        );
+    }
+
+    private AccountSummaryResponse toSummary(Account account) {
+        Character avatar = account.getAvatarCharacter();
+        return new AccountSummaryResponse(
+                account.getAccountId(),
+                account.getUsername(),
+                avatar != null ? avatar.getId() : null,
+                avatar != null ? avatar.getName() : null
         );
     }
 }

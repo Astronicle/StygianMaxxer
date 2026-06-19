@@ -220,4 +220,15 @@ public class PostServiceImpl implements PostService {
     public RatingSummaryResponse getRatingSummary(Integer postId) {
         return postRatingRepository.getSummaryByPostId(postId);
     }
+
+    // ── Bosses killed in a post ──────────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BossResponse> getPostBosses(Integer postId) {
+        return postRepository.findBossesForPost(postId)
+                .stream()
+                .map(boss -> new BossResponse(boss.getId(), boss.getSlug(), boss.getName()))
+                .toList();
+    }
 }

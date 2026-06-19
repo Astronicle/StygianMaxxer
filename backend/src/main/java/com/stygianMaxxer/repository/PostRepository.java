@@ -82,4 +82,17 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("charId")    Short charId,
             Pageable pageable
     );
+
+    // ── Bosses killed in a post (lightweight, no character detail) ──────────────
+    // Used by post summary cards (e.g. the user profile post list) to show
+    // which boss icons belong to a given post without loading the full
+    // Post + characters graph.
+    @Query("""
+        SELECT DISTINCT b
+        FROM PostBoss pb
+        JOIN pb.boss b
+        WHERE pb.post.postId = :postId
+        ORDER BY b.name
+    """)
+    List<com.stygianMaxxer.model.Boss> findBossesForPost(@Param("postId") Integer postId);
 }
