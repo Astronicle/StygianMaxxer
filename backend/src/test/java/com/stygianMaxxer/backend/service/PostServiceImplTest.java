@@ -28,6 +28,8 @@ class PostServiceImplTest {
     @Mock BossRepository bossRepository;
     @Mock StygianBossRepository stygianBossRepository;
     @Mock CharacterRepository characterRepository;
+    @Mock WeaponRepository weaponRepository;
+    @Mock ArtifactSetRepository artifactSetRepository;
     @Mock PostRatingRepository postRatingRepository;
 
     @InjectMocks PostServiceImpl postService;

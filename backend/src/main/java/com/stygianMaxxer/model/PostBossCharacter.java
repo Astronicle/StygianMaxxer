@@ -32,6 +32,14 @@ public class PostBossCharacter {
     @JoinColumn(name = "char_id", nullable = false)
     private Character character;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "weapon_id", nullable = false)
+    private Weapon weapon;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "artifact_set_id", nullable = false)
+    private ArtifactSet artifactSet;
+
     @Column(name = "has_sig", nullable = false)
     private boolean hasSig;
 

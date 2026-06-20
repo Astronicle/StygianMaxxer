@@ -15,6 +15,8 @@ public class LookUpController {
     private final WeaponTypeService weaponTypeService;
     private final CharacterService characterService;
     private final BossService bossService;
+    private final WeaponService weaponService;
+    private final ArtifactSetService artifactSetService;
 
     //Elements
     @GetMapping("/elements")
@@ -68,5 +70,32 @@ public class LookUpController {
     @GetMapping("/bosses/{slug}")
     public BossResponse getBossBySlug(@PathVariable String slug) {
         return bossService.getBySlug(slug);
+    }
+
+    //Weapons
+    @GetMapping("/weapons")
+    public List<WeaponResponse> getWeapons() {
+        return weaponService.getAllWeapons();
+    }
+
+    @GetMapping("/weapons/{slug}")
+    public WeaponResponse getWeaponBySlug(@PathVariable String slug) {
+        return weaponService.getBySlug(slug);
+    }
+
+    @GetMapping("/weapons/by-weapon-type/{weaponTypeId}")
+    public List<WeaponResponse> getWeaponsByWeaponType(@PathVariable short weaponTypeId) {
+        return weaponService.getByWeaponType(weaponTypeId);
+    }
+
+    //Artifact Sets
+    @GetMapping("/artifact-sets")
+    public List<ArtifactSetResponse> getArtifactSets() {
+        return artifactSetService.getAllArtifactSets();
+    }
+
+    @GetMapping("/artifact-sets/{slug}")
+    public ArtifactSetResponse getArtifactSetBySlug(@PathVariable String slug) {
+        return artifactSetService.getBySlug(slug);
     }
 }

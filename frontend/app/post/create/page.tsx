@@ -10,6 +10,8 @@ import { getToken, apiGetStygians, type Stygian } from "@/app/lib/api";
 // POST /api/posts → PostCreateRequest → PostBossCreateRequest → PostBossCharacterCreateRequest
 type CharacterEntry = {
   charId: number;
+  weaponId: number | null;
+  artifactSetId: number | null;
   slot: number;    // 1–4, assigned in order of adding
   hasSig: boolean;
   cons: number;    // 0–6
@@ -34,8 +36,21 @@ type CharacterOption = {
   weaponType: { id: number; slug: string; name: string };
 };
 
-const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
-const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
+// A weapon as returned by GET /api/weapons
+type WeaponOption = {
+  id: number;
+  slug: string;
+  name: string;
+  rarity: number;
+  weaponType: { id: number; slug: string; name: string };
+};
+
+// An artifact set as returned by GET /api/artifact-sets
+type ArtifactSetOption = {
+  id: number;
+  slug: string;
+  name: string;
+};
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -51,6 +66,8 @@ export default function PostCreatePage() {
   // ── Lookup data loaded from the API
   const [stygians, setStygians] = useState<Stygian[]>([]);
   const [characters, setCharacters] = useState<CharacterOption[]>([]);
+  const [weapons, setWeapons] = useState<WeaponOption[]>([]);
+  const [artifactSets, setArtifactSets] = useState<ArtifactSetOption[]>([]);
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [lookupsError, setLookupsError] = useState<string | null>(null);
 
@@ -70,19 +87,24 @@ export default function PostCreatePage() {
     if (!getToken()) router.push("/login");
   }, [router]);
 
-  // ── Load stygians + characters in parallel on mount
+  // ── Load stygians + characters + weapons + artifact sets in parallel on mount
   useEffect(() => {
     async function loadLookups() {
       try {
         const { apiFetch } = await import("@/app/lib/api");
-        const [stygiansData, charsData] = await Promise.all([
+        const [stygiansData, charsData, weaponsData, artifactSetsData] = await Promise.all([
           apiGetStygians(),
           apiFetch<CharacterOption[]>("/api/characters"),
+          apiFetch<WeaponOption[]>("/api/weapons"),
+          apiFetch<ArtifactSetOption[]>("/api/artifact-sets"),
         ]);
         // Sort newest stygian first
         setStygians(stygiansData.sort((a, b) => b.version.localeCompare(a.version)));
         // Sort characters alphabetically
         setCharacters(charsData.sort((a, b) => a.name.localeCompare(b.name)));
+        setWeapons(weaponsData);
+        // Sort artifact sets alphabetically
+        setArtifactSets(artifactSetsData.sort((a, b) => a.name.localeCompare(b.name)));
       } catch (err) {
         setLookupsError(err instanceof Error ? err.message : "Failed to load form data");
       } finally {
@@ -135,6 +157,14 @@ export default function PostCreatePage() {
   }
 
   function addCharacterToBoss(bossId: number, char: CharacterOption) {
+    // Default to the highest-rarity weapon matching this character's weapon type,
+    // since a weapon selection is compulsory. Artifact set is left unset so the
+    // user makes a conscious choice.
+    const matchingWeapons = weapons
+      .filter((w) => w.weaponType.id === char.weaponType.id)
+      .sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
+    const defaultWeaponId = matchingWeapons.length > 0 ? matchingWeapons[0].id : null;
+
     setBossEntries((prev) =>
       prev.map((b) => {
         if (b.bossId !== bossId) return b;
@@ -145,7 +175,14 @@ export default function PostCreatePage() {
           ...b,
           characters: [
             ...b.characters,
-            { charId: char.id, slot: nextSlot, hasSig: false, cons: 0 },
+            {
+              charId: char.id,
+              weaponId: defaultWeaponId,
+              artifactSetId: null,
+              slot: nextSlot,
+              hasSig: false,
+              cons: 0,
+            },
           ],
         };
       })
@@ -168,7 +205,7 @@ export default function PostCreatePage() {
   function updateCharacterField(
     bossId: number,
     charId: number,
-    field: "cons" | "hasSig",
+    field: "cons" | "hasSig" | "weaponId" | "artifactSetId",
     value: number | boolean
   ) {
     setBossEntries((prev) =>
@@ -190,6 +227,19 @@ export default function PostCreatePage() {
     if (!selectedStygianId) return;
 
     setSubmitError(null);
+
+    // canSubmit (disabled state) already guarantees every character has a
+    // weapon + artifact set selected, but guard explicitly before sending.
+    const activeBosses = bossEntries.filter((b) => activeBossIds.has(b.bossId));
+    for (const b of activeBosses) {
+      for (const c of b.characters) {
+        if (c.weaponId === null || c.artifactSetId === null) {
+          setSubmitError("Every character needs a weapon and artifact set selected.");
+          return;
+        }
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -203,13 +253,13 @@ export default function PostCreatePage() {
         description,
         videoLink,
         difficulty,
-        bosses: bossEntries
-          .filter((b) => activeBossIds.has(b.bossId))
-          .map((b) => ({
+        bosses: activeBosses.map((b) => ({
           bossId: b.bossId,
           buildInfo: b.buildInfo,
           characters: b.characters.map((c) => ({
             charId: c.charId,
+            weaponId: c.weaponId as number,
+            artifactSetId: c.artifactSetId as number,
             slot: c.slot,
             hasSig: c.hasSig,
             cons: c.cons,
@@ -252,11 +302,15 @@ export default function PostCreatePage() {
   const selectedStygian = stygians.find((s) => s.id === selectedStygianId);
   const activeBosses = bossEntries.filter((b) => activeBossIds.has(b.bossId));
 
-  // Validation: at least 1 boss selected, and every active boss has ≥1 character + buildInfo
+  // Validation: at least 1 boss selected, and every active boss has ≥1 character + buildInfo,
+  // and every character has a weapon + artifact set selected (both compulsory)
   const bossesValid =
     activeBosses.length >= 1 &&
     activeBosses.every(
-      (b) => b.characters.length >= 1 && b.buildInfo.trim().length > 0
+      (b) =>
+        b.characters.length >= 1 &&
+        b.buildInfo.trim().length > 0 &&
+        b.characters.every((c) => c.weaponId !== null && c.artifactSetId !== null)
     );
   const canSubmit =
     title.trim() &&
@@ -381,6 +435,8 @@ export default function PostCreatePage() {
                     <BossSection
                       boss={boss}
                       allCharacters={characters}
+                      allWeapons={weapons}
+                      allArtifactSets={artifactSets}
                       onBuildInfoChange={(v) => setBuildInfo(boss.bossId, v)}
                       onAddCharacter={(c) => addCharacterToBoss(boss.bossId, c)}
                       onRemoveCharacter={(charId) => removeCharacterFromBoss(boss.bossId, charId)}
@@ -420,15 +476,23 @@ export default function PostCreatePage() {
 type BossSectionProps = {
   boss: BossEntry;
   allCharacters: CharacterOption[];
+  allWeapons: WeaponOption[];
+  allArtifactSets: ArtifactSetOption[];
   onBuildInfoChange: (v: string) => void;
   onAddCharacter: (c: CharacterOption) => void;
   onRemoveCharacter: (charId: number) => void;
-  onUpdateCharacter: (charId: number, field: "cons" | "hasSig", value: number | boolean) => void;
+  onUpdateCharacter: (
+    charId: number,
+    field: "cons" | "hasSig" | "weaponId" | "artifactSetId",
+    value: number | boolean
+  ) => void;
 };
 
 function BossSection({
   boss,
   allCharacters,
+  allWeapons,
+  allArtifactSets,
   onBuildInfoChange,
   onAddCharacter,
   onRemoveCharacter,
@@ -436,6 +500,8 @@ function BossSection({
 }: BossSectionProps) {
   const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
   const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
+  const WEAPON_ICON_BASE = process.env.NEXT_PUBLIC_WEAPON_ICON_BASE_URL ?? "";
+  const ARTIFACT_ICON_BASE = process.env.NEXT_PUBLIC_ARTIFACT_ICON_BASE_URL ?? "";
 
   const selectedCharIds = new Set(boss.characters.map((c) => c.charId));
 
@@ -499,53 +565,120 @@ function BossSection({
             {boss.characters.map((entry) => {
               const char = allCharacters.find((c) => c.id === entry.charId);
               if (!char) return null;
+
+              // Only weapons matching this character's weapon type are selectable,
+              // sorted by rarity descending (5★ first) for easier scanning.
+              const matchingWeapons = allWeapons
+                .filter((w) => w.weaponType.id === char.weaponType.id)
+                .sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
+              const selectedWeapon = matchingWeapons.find((w) => w.id === entry.weaponId);
+              const selectedArtifactSet = allArtifactSets.find((a) => a.id === entry.artifactSetId);
+
               return (
-                <div key={entry.charId} className="flex items-center gap-3 py-2 flex-wrap">
-                  <img
-                    src={`${CHAR_ICON_BASE}/${char.slug}/icon.webp`}
-                    alt={char.name}
-                    className="w-9 h-9 rounded-md object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-
-                  <span className="font-medium w-24 text-sm">{char.name}</span>
-                  <span className="text-xs opacity-50">Slot {entry.slot}</span>
-
-                  {/* Constellation */}
-                  <label className="flex items-center gap-1 text-sm">
-                    <span className="opacity-60">C</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={6}
-                      value={entry.cons}
-                      onChange={(e) =>
-                        onUpdateCharacter(entry.charId, "cons", Number(e.target.value))
-                      }
-                      className="input input-bordered input-xs w-14"
+                <div key={entry.charId} className="py-2 space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <img
+                      src={`${CHAR_ICON_BASE}/${char.slug}/icon.webp`}
+                      alt={char.name}
+                      className="w-9 h-9 rounded-md object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                     />
-                  </label>
 
-                  {/* Signature weapon */}
-                  <label className="flex items-center gap-1 text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs"
-                      checked={entry.hasSig}
-                      onChange={(e) =>
-                        onUpdateCharacter(entry.charId, "hasSig", e.target.checked)
-                      }
-                    />
-                    Sig
-                  </label>
+                    <span className="font-medium w-24 text-sm">{char.name}</span>
+                    <span className="text-xs opacity-50">Slot {entry.slot}</span>
 
-                  <button
-                    type="button"
-                    className="btn btn-xs btn-error ml-auto"
-                    onClick={() => onRemoveCharacter(entry.charId)}
-                  >
-                    Remove
-                  </button>
+                    {/* Constellation */}
+                    <label className="flex items-center gap-1 text-sm">
+                      <span className="opacity-60">C</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={6}
+                        value={entry.cons}
+                        onChange={(e) =>
+                          onUpdateCharacter(entry.charId, "cons", Number(e.target.value))
+                        }
+                        className="input input-bordered input-xs w-14"
+                      />
+                    </label>
+
+                    {/* Signature weapon */}
+                    <label className="flex items-center gap-1 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-xs"
+                        checked={entry.hasSig}
+                        onChange={(e) =>
+                          onUpdateCharacter(entry.charId, "hasSig", e.target.checked)
+                        }
+                      />
+                      Sig
+                    </label>
+
+                    <button
+                      type="button"
+                      className="btn btn-xs btn-error ml-auto"
+                      onClick={() => onRemoveCharacter(entry.charId)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap pl-12">
+                    {/* Weapon picker — required, filtered to character's weapon type */}
+                    <label className="flex items-center gap-2 text-sm">
+                      {selectedWeapon && (
+                        <img
+                          src={`${WEAPON_ICON_BASE}/${selectedWeapon.weaponType.slug}/${selectedWeapon.slug}.png`}
+                          alt={selectedWeapon.name}
+                          className="w-7 h-7 rounded object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
+                      <select
+                        className="select select-bordered select-xs w-44"
+                        value={entry.weaponId ?? ""}
+                        onChange={(e) =>
+                          onUpdateCharacter(entry.charId, "weaponId", Number(e.target.value))
+                        }
+                        required
+                      >
+                        <option disabled value="">Select weapon…</option>
+                        {matchingWeapons.map((w) => (
+                          <option key={w.id} value={w.id}>
+                            {"★".repeat(w.rarity)} {w.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    {/* Artifact set picker — required */}
+                    <label className="flex items-center gap-2 text-sm">
+                      {selectedArtifactSet && (
+                        <img
+                          src={`${ARTIFACT_ICON_BASE}/${selectedArtifactSet.slug}.png`}
+                          alt={selectedArtifactSet.name}
+                          className="w-7 h-7 rounded object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
+                      <select
+                        className="select select-bordered select-xs w-52"
+                        value={entry.artifactSetId ?? ""}
+                        onChange={(e) =>
+                          onUpdateCharacter(entry.charId, "artifactSetId", Number(e.target.value))
+                        }
+                        required
+                      >
+                        <option disabled value="">Select artifact set…</option>
+                        {allArtifactSets.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                 </div>
               );
             })}

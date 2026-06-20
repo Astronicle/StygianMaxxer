@@ -5,6 +5,11 @@ type Character = {
   element: string;
   cons: number;
   hasSig: boolean;
+  weaponName?: string;
+  weaponIcon?: string;
+  weaponRarity?: number;
+  artifactSetName?: string;
+  artifactSetIcon?: string;
 };
 
 export default function CharacterBadge({
@@ -13,6 +18,11 @@ export default function CharacterBadge({
   element,
   cons,
   hasSig,
+  weaponName,
+  weaponIcon,
+  weaponRarity,
+  artifactSetName,
+  artifactSetIcon,
 }: Character) {
   return (
     <div className="flex items-center gap-3 bg-base-200 rounded-lg p-2">
@@ -22,7 +32,7 @@ export default function CharacterBadge({
         className="w-12 h-12 rounded-md object-cover"
       />
 
-      <div className="text-sm">
+      <div className="text-sm flex-1">
         <p className="font-semibold">{name}</p>
         <p className="opacity-70">
           {element} • C{cons}
@@ -31,6 +41,43 @@ export default function CharacterBadge({
           <span className="badge badge-primary badge-sm mt-1">Signature</span>
         )}
       </div>
+
+      {/* Weapon */}
+      {weaponName && (
+        <div className="flex items-center gap-2" title={weaponName}>
+          {weaponIcon && (
+            <img
+              src={weaponIcon}
+              alt={weaponName}
+              className="w-9 h-9 rounded-md object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          )}
+          <div className="text-xs leading-tight">
+            <p className="font-medium">{weaponName}</p>
+            {typeof weaponRarity === "number" && (
+              <p className="opacity-60">{"★".repeat(weaponRarity)}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Artifact Set */}
+      {artifactSetName && (
+        <div className="flex items-center gap-2" title={artifactSetName}>
+          {artifactSetIcon && (
+            <img
+              src={artifactSetIcon}
+              alt={artifactSetName}
+              className="w-9 h-9 rounded-md object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          )}
+          <p className="text-xs font-medium leading-tight max-w-[6rem]">
+            {artifactSetName}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

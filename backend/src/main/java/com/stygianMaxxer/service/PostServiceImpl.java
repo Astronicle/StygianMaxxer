@@ -26,6 +26,8 @@ public class PostServiceImpl implements PostService {
     private final BossRepository bossRepository;
     private final StygianBossRepository stygianBossRepository;
     private final CharacterRepository characterRepository;
+    private final WeaponRepository weaponRepository;
+    private final ArtifactSetRepository artifactSetRepository;
     private final PostRatingRepository postRatingRepository;
     private final EntityManager entityManager;
 
@@ -81,8 +83,14 @@ public class PostServiceImpl implements PostService {
                 Character character = characterRepository.findById(charReq.charId())
                         .orElseThrow(() -> new NoSuchElementException("Character not found: " + charReq.charId()));
 
+                Weapon weapon = resolveWeaponForCharacter(character, charReq.weaponId());
+                ArtifactSet artifactSet = artifactSetRepository.findById(charReq.artifactSetId())
+                        .orElseThrow(() -> new NoSuchElementException("Artifact set not found: " + charReq.artifactSetId()));
+
                 PostBossCharacter pbc = PostBossCharacter.builder()
                         .character(character)
+                        .weapon(weapon)
+                        .artifactSet(artifactSet)
                         .hasSig(charReq.hasSig())
                         .cons(charReq.cons())
                         .build();
@@ -207,8 +215,14 @@ public class PostServiceImpl implements PostService {
                     Character character = characterRepository.findById(charReq.charId())
                             .orElseThrow(() -> new NoSuchElementException("Character not found: " + charReq.charId()));
 
+                    Weapon weapon = resolveWeaponForCharacter(character, charReq.weaponId());
+                    ArtifactSet artifactSet = artifactSetRepository.findById(charReq.artifactSetId())
+                            .orElseThrow(() -> new NoSuchElementException("Artifact set not found: " + charReq.artifactSetId()));
+
                     PostBossCharacter pbc = PostBossCharacter.builder()
                             .character(character)
+                            .weapon(weapon)
+                            .artifactSet(artifactSet)
                             .hasSig(charReq.hasSig())
                             .cons(charReq.cons())
                             .build();
@@ -287,5 +301,27 @@ public class PostServiceImpl implements PostService {
                 .stream()
                 .map(boss -> new BossResponse(boss.getId(), boss.getSlug(), boss.getName()))
                 .toList();
+    }
+
+    // ── Weapon resolution / validation ───────────────────────────────────────
+    // A character may only be equipped with a weapon matching their weapon type
+    // (e.g. a sword-user can only equip swords).
+
+    private Weapon resolveWeaponForCharacter(Character character, Short weaponId) {
+        Weapon weapon = weaponRepository.findById(weaponId)
+                .orElseThrow(() -> new NoSuchElementException("Weapon not found: " + weaponId));
+
+        short charWeaponTypeId = character.getWeaponType().getId();
+        short weaponTypeId = weapon.getWeaponType().getId();
+
+        if (charWeaponTypeId != weaponTypeId) {
+            throw new IllegalArgumentException(
+                    "Weapon '" + weapon.getName() + "' (" + weapon.getWeaponType().getName() +
+                    ") cannot be equipped by '" + character.getName() + "' (" +
+                    character.getWeaponType().getName() + ")"
+            );
+        }
+
+        return weapon;
     }
 }

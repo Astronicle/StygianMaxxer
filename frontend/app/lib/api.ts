@@ -165,6 +165,14 @@ export interface PostBossCharacter {
   charId: number;       // backend: Short
   charName: string;
   charSlug: string;     // used to build Supabase icon URL
+  weaponId: number;        // backend: Short
+  weaponName: string;
+  weaponSlug: string;      // used to build Supabase icon URL
+  weaponRarity: number;    // backend: short, 1-5
+  weaponTypeSlug: string;  // e.g. "sword" — icon path is <base>/<weaponTypeSlug>/<weaponSlug>.png
+  artifactSetId: number;   // backend: Short
+  artifactSetName: string;
+  artifactSetSlug: string; // used to build Supabase icon URL
   slot: number;         // which slot this character fills (1-based)
   hasSig: boolean;      // has signature weapon
   cons: number;         // constellation level
@@ -207,6 +215,8 @@ export interface PostBossUpdateEntry {
   buildInfo: string;
   characters: {
     charId: number;
+    weaponId: number;
+    artifactSetId: number;
     slot: number;
     hasSig: boolean;
     cons: number;
@@ -304,4 +314,50 @@ export async function apiGetBosses(): Promise<Boss[]> {
 // GET /api/bosses/{slug}  (public)
 export async function apiGetBoss(slug: string): Promise<Boss> {
   return apiFetch<Boss>(`/api/bosses/${slug}`);
+}
+
+// ─── Weapons (lookup) ─────────────────────────────────────────────────────────
+// Backend DTO: WeaponResponse { id: short, slug: String, name: String, rarity: short, weaponType: LookupRef }
+
+export interface Weapon {
+  id: number;     // backend: short
+  slug: string;   // used to build Supabase icon URL
+  name: string;
+  rarity: number; // 1-5
+  weaponType: { id: number; slug: string; name: string };
+}
+
+// GET /api/weapons  (public)
+export async function apiGetWeapons(): Promise<Weapon[]> {
+  return apiFetch<Weapon[]>("/api/weapons");
+}
+
+// GET /api/weapons/{slug}  (public)
+export async function apiGetWeapon(slug: string): Promise<Weapon> {
+  return apiFetch<Weapon>(`/api/weapons/${slug}`);
+}
+
+// GET /api/weapons/by-weapon-type/{weaponTypeId}  (public)
+// Used to filter the weapon picker down to only weapons a given character can equip.
+export async function apiGetWeaponsByWeaponType(weaponTypeId: number): Promise<Weapon[]> {
+  return apiFetch<Weapon[]>(`/api/weapons/by-weapon-type/${weaponTypeId}`);
+}
+
+// ─── Artifact Sets (lookup) ───────────────────────────────────────────────────
+// Backend DTO: ArtifactSetResponse { id: short, slug: String, name: String }
+
+export interface ArtifactSet {
+  id: number;    // backend: short
+  slug: string;  // used to build Supabase icon URL
+  name: string;
+}
+
+// GET /api/artifact-sets  (public)
+export async function apiGetArtifactSets(): Promise<ArtifactSet[]> {
+  return apiFetch<ArtifactSet[]>("/api/artifact-sets");
+}
+
+// GET /api/artifact-sets/{slug}  (public)
+export async function apiGetArtifactSet(slug: string): Promise<ArtifactSet> {
+  return apiFetch<ArtifactSet>(`/api/artifact-sets/${slug}`);
 }

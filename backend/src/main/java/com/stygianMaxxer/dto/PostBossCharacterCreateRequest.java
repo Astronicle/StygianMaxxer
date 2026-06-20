@@ -8,6 +8,12 @@ public record PostBossCharacterCreateRequest(
         Short charId,
 
         @NotNull
+        Short weaponId,
+
+        @NotNull
+        Short artifactSetId,
+
+        @NotNull
         @Min(1)
         @Max(4)
         Short slot,     // boxed so @Min/@Max actually fire

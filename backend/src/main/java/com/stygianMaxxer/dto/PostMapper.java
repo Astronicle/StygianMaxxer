@@ -1,12 +1,14 @@
 package com.stygianMaxxer.dto;
 
 import com.stygianMaxxer.model.Account;
+import com.stygianMaxxer.model.ArtifactSet;
 import com.stygianMaxxer.model.Boss;
 import com.stygianMaxxer.model.Character;
 import com.stygianMaxxer.model.Post;
 import com.stygianMaxxer.model.PostBoss;
 import com.stygianMaxxer.model.PostBossCharacter;
 import com.stygianMaxxer.model.Stygian;
+import com.stygianMaxxer.model.Weapon;
 
 import java.util.List;
 
@@ -75,10 +77,31 @@ public final class PostMapper {
         String charName = character != null ? character.getName() : null;
         String charSlug = character != null ? character.getSlug() : null;
 
+        Weapon weapon = pbc.getWeapon();
+        Short  weaponId       = weapon != null ? weapon.getId()   : null;
+        String weaponName     = weapon != null ? weapon.getName() : null;
+        String weaponSlug     = weapon != null ? weapon.getSlug() : null;
+        short  weaponRarity   = weapon != null ? weapon.getRarity() : 0;
+        String weaponTypeSlug = (weapon != null && weapon.getWeaponType() != null)
+                ? weapon.getWeaponType().getSlug() : null;
+
+        ArtifactSet artifactSet = pbc.getArtifactSet();
+        Short  artifactSetId   = artifactSet != null ? artifactSet.getId()   : null;
+        String artifactSetName = artifactSet != null ? artifactSet.getName() : null;
+        String artifactSetSlug = artifactSet != null ? artifactSet.getSlug() : null;
+
         return new PostBossCharacterResponse(
                 charId,
                 charName,
                 charSlug,
+                weaponId,
+                weaponName,
+                weaponSlug,
+                weaponRarity,
+                weaponTypeSlug,
+                artifactSetId,
+                artifactSetName,
+                artifactSetSlug,
                 pbc.getSlot(),
                 pbc.isHasSig(),
                 pbc.getCons()

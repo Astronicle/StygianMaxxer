@@ -14,6 +14,8 @@ import BossCard from "@/app/components/post/BossCard";
 
 const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
 const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
+const WEAPON_ICON_BASE = process.env.NEXT_PUBLIC_WEAPON_ICON_BASE_URL ?? "";
+const ARTIFACT_ICON_BASE = process.env.NEXT_PUBLIC_ARTIFACT_ICON_BASE_URL ?? "";
 
 // Map a bossSlug/charName to the Supabase icon URL.
 // Boss icons live at: <BOSS_ICON_BASE><bossSlug>.png  (same bucket the dashboard uses)
@@ -23,6 +25,12 @@ function bossIcon(slug: string) {
 }
 function charIcon(name: string) {
   return `${CHAR_ICON_BASE}/${name}/icon.webp`;
+}
+function weaponIcon(weaponTypeSlug: string, weaponSlug: string) {
+  return `${WEAPON_ICON_BASE}/${weaponTypeSlug}/${weaponSlug}.png`;
+}
+function artifactSetIcon(slug: string) {
+  return `${ARTIFACT_ICON_BASE}/${slug}.png`;
 }
 
 export default function PostPage() {
@@ -90,6 +98,11 @@ export default function PostPage() {
       element: "",   // backend doesn't return element — add later if needed
       cons: c.cons,
       hasSig: c.hasSig,
+      weaponName: c.weaponName,
+      weaponIcon: weaponIcon(c.weaponTypeSlug, c.weaponSlug),
+      weaponRarity: c.weaponRarity,
+      artifactSetName: c.artifactSetName,
+      artifactSetIcon: artifactSetIcon(c.artifactSetSlug),
     })),
   }));
 

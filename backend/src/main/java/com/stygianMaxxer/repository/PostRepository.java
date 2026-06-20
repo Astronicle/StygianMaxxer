@@ -42,6 +42,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
         FROM PostBoss pb
         LEFT JOIN FETCH pb.characters pbc
         LEFT JOIN FETCH pbc.character
+        LEFT JOIN FETCH pbc.weapon w
+        LEFT JOIN FETCH w.weaponType
+        LEFT JOIN FETCH pbc.artifactSet
         WHERE pb.postBossId IN :bossIds
     """)
     List<PostBoss> findBossesWithCharacters(@Param("bossIds") List<Long> bossIds);
