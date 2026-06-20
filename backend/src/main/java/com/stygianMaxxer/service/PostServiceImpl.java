@@ -5,6 +5,7 @@ import com.stygianMaxxer.model.*;
 import com.stygianMaxxer.model.Character;
 import com.stygianMaxxer.repository.*;
 import com.stygianMaxxer.repository.StygianBossRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ public class PostServiceImpl implements PostService {
     private final StygianBossRepository stygianBossRepository;
     private final CharacterRepository characterRepository;
     private final PostRatingRepository postRatingRepository;
+    private final EntityManager entityManager;
 
     // ── Create ────────────────────────────────────────────────────────────────
 
@@ -45,6 +47,7 @@ public class PostServiceImpl implements PostService {
                 .postTitle(request.title())
                 .postDesc(request.description())
                 .videoLink(request.videoLink())
+                .difficulty(request.difficulty())
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -163,6 +166,9 @@ public class PostServiceImpl implements PostService {
             if (request.videoLink().isBlank()) throw new IllegalArgumentException("Video link must not be blank");
             post.setVideoLink(request.videoLink());
         }
+        if (request.difficulty() != null) {
+            post.setDifficulty(request.difficulty());
+        }
 
         // ── Optional boss replacement ─────────────────────────────────────────
         // If the client sends a bosses list, fully replace the existing ones.
@@ -170,6 +176,7 @@ public class PostServiceImpl implements PostService {
         // the old PostBoss (and their PostBossCharacter) rows automatically.
         if (request.bosses() != null) {
             post.getBosses().clear();
+            entityManager.flush(); // ensure orphan-removal DELETEs run before new PostBoss INSERTs
 
             request.bosses().forEach(bossReq -> {
 

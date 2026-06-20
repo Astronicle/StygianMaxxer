@@ -2,6 +2,7 @@ package com.stygianMaxxer.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import com.stygianMaxxer.model.Difficulty;
 import java.util.List;
 
 /**
@@ -23,6 +24,9 @@ public record PostUpdateRequest(
 
         /** Leave null to keep the existing video link. */
         String videoLink,
+
+        /** Leave null to keep the existing difficulty. */
+        Difficulty difficulty,
 
         /**
          * Leave null to keep the existing bosses unchanged.

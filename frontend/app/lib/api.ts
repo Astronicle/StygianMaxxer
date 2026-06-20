@@ -137,6 +137,7 @@ export interface PostSummary {
   createdAt: string;            // ISO OffsetDateTime string
   averageRating: number | null; // null if no ratings yet
   ratingCount: number;          // NOTE: backend returns Long — JS treats it as number fine
+  difficulty: "Fearless" | "Dire";
 }
 
 // Generic Spring Page wrapper
@@ -182,6 +183,7 @@ export interface PostDetail {
   title: string;
   description: string | null;
   videoLink: string | null;
+  difficulty: "Fearless" | "Dire";
   createdAt: string;
   updatedAt: string;
   account: { accountId: number; username: string };
@@ -219,6 +221,7 @@ export async function apiUpdatePost(
     title?: string;
     description?: string;
     videoLink?: string;
+    difficulty?: "Fearless" | "Dire";
     bosses?: PostBossUpdateEntry[];
   }
 ): Promise<PostDetail> {

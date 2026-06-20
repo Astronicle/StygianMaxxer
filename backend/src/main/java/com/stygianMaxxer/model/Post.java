@@ -3,6 +3,9 @@ package com.stygianMaxxer.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +40,11 @@ public class Post {
 
     @Column(name = "video_link", nullable = false)
     private String videoLink;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "difficulty", nullable = false)
+    private Difficulty difficulty;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

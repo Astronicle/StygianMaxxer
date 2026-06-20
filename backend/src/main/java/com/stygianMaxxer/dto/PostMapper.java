@@ -37,6 +37,7 @@ public final class PostMapper {
                 post.getPostTitle(),
                 post.getPostDesc(),
                 post.getVideoLink(),
+                post.getDifficulty(),
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
                 accountSummary,

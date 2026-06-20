@@ -54,6 +54,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             a.username,
             s.name,
             p.createdAt,
+            p.difficulty,
             CAST(COALESCE(AVG(r.rating), 0.0) AS double),
             COUNT(r.rating)
         )
@@ -73,7 +74,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
                 JOIN pb.characters pbc
                 WHERE pb.post = p AND pbc.character.id = :charId
             ))
-        GROUP BY p.postId, p.postTitle, a.username, s.name, p.createdAt
+        GROUP BY p.postId, p.postTitle, a.username, s.name, p.createdAt, p.difficulty
     """)
     Page<PostSummaryResponse> findPostSummaries(
             @Param("stygianId") Short stygianId,

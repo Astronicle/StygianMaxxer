@@ -46,6 +46,7 @@ export default function PostCreatePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoLink, setVideoLink] = useState("");
+  const [difficulty, setDifficulty] = useState<"Fearless" | "Dire">("Fearless");
 
   // ── Lookup data loaded from the API
   const [stygians, setStygians] = useState<Stygian[]>([]);
@@ -201,6 +202,7 @@ export default function PostCreatePage() {
         title,
         description,
         videoLink,
+        difficulty,
         bosses: bossEntries
           .filter((b) => activeBossIds.has(b.bossId))
           .map((b) => ({
@@ -309,6 +311,19 @@ export default function PostCreatePage() {
               onChange={(e) => setVideoLink(e.target.value)}
               required
             />
+          </div>
+
+          <div className="form-control">
+            <label className="label"><span className="label-text">Difficulty</span></label>
+            <select
+              className="select select-bordered w-full max-w-xs"
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value as "Fearless" | "Dire")}
+              required
+            >
+              <option value="Fearless">Fearless</option>
+              <option value="Dire">Dire</option>
+            </select>
           </div>
         </section>
 

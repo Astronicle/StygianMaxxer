@@ -21,8 +21,17 @@ export default function StygianPostCard({ post }: StygianPostCardProps) {
       <div className="card-body gap-3">
         <h3 className="card-title text-lg line-clamp-1">{post.title}</h3>
 
-        {/* stygianName badge — confirms which cycle this post belongs to */}
-        <span className="badge badge-outline badge-sm">{post.stygianName}</span>
+        {/* stygianName badge + difficulty badge */}
+        <div className="flex items-center gap-2">
+          <span className="badge badge-outline badge-sm">{post.stygianName}</span>
+          <span
+            className={`badge badge-sm font-semibold ${
+              post.difficulty === "Dire" ? "badge-error" : "badge-warning"
+            }`}
+          >
+            {post.difficulty}
+          </span>
+        </div>
 
         <div className="flex flex-wrap gap-2 text-sm opacity-70">
           <span>By {post.username}</span>

@@ -4,6 +4,7 @@ type PostHeaderProps = {
   title: string;
   description: string;
   createdAt: string;
+  difficulty: "Fearless" | "Dire";
   author: {
     username: string;
   };
@@ -14,6 +15,7 @@ export default function PostHeader({
   title,
   description,
   createdAt,
+  difficulty,
   author,
   rating,
 }: PostHeaderProps) {
@@ -28,7 +30,16 @@ export default function PostHeader({
         <span>{new Date(createdAt).toDateString()}</span>
       </div>
 
-      <RatingStars rating={rating} />
+      <div className="flex items-center gap-3">
+        <span
+          className={`badge badge-sm font-semibold ${
+            difficulty === "Dire" ? "badge-error" : "badge-warning"
+          }`}
+        >
+          {difficulty}
+        </span>
+        <RatingStars rating={rating} />
+      </div>
     </div>
   );
 }

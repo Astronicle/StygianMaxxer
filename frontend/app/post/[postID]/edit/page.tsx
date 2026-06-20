@@ -53,6 +53,7 @@ export default function PostEditPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoLink, setVideoLink] = useState("");
+  const [difficulty, setDifficulty] = useState<"Fearless" | "Dire">("Fearless");
 
   // ── Boss entries (mirrors the current post's bosses)
   const [bossEntries, setBossEntries] = useState<BossEntry[]>([]);
@@ -92,6 +93,7 @@ export default function PostEditPage() {
         setTitle(post.title);
         setDescription(post.description ?? "");
         setVideoLink(post.videoLink ?? "");
+        setDifficulty(post.difficulty ?? "Fearless");
         setBossEntries(
           post.bosses.map((b) => ({
             bossId: b.bossId,
@@ -202,7 +204,7 @@ export default function PostEditPage() {
         })),
       }));
 
-      await apiUpdatePost(postId, { title, description, videoLink, bosses });
+      await apiUpdatePost(postId, { title, description, videoLink, difficulty, bosses });
       router.push(`/post/${postId}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Update failed");
@@ -282,6 +284,19 @@ export default function PostEditPage() {
               onChange={(e) => setVideoLink(e.target.value)}
               required
             />
+          </div>
+
+          <div className="form-control">
+            <label className="label"><span className="label-text">Difficulty</span></label>
+            <select
+              className="select select-bordered w-full max-w-xs"
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value as "Fearless" | "Dire")}
+              required
+            >
+              <option value="Fearless">Fearless</option>
+              <option value="Dire">Dire</option>
+            </select>
           </div>
         </section>
 

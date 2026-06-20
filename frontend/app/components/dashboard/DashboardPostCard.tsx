@@ -11,6 +11,7 @@ type DashboardPostCardProps = {
   postID: number;
   title: string;
   description: string;   // stygianName
+  difficulty: "Fearless" | "Dire";
   rating: number;        // averageRating, 0 if null
   createdAt: string;     // ISO OffsetDateTime string from backend
   onDeleted?: (postId: number) => void;
@@ -20,6 +21,7 @@ export default function DashboardPostCard({
   postID,
   title,
   description,
+  difficulty,
   rating,
   createdAt,
   onDeleted,
@@ -57,8 +59,17 @@ export default function DashboardPostCard({
             <h3 className="card-title text-lg line-clamp-1">{title}</h3>
           </Link>
 
-          {/* Stygian badge */}
-          <span className="badge badge-outline badge-sm">{description}</span>
+          {/* Stygian badge + difficulty */}
+          <div className="flex items-center gap-2">
+            <span className="badge badge-outline badge-sm">{description}</span>
+            <span
+              className={`badge badge-sm font-semibold ${
+                difficulty === "Dire" ? "badge-error" : "badge-warning"
+              }`}
+            >
+              {difficulty}
+            </span>
+          </div>
 
           <div className="flex items-center justify-between text-sm opacity-70 mt-1">
             <span>{formattedDate}</span>

@@ -67,7 +67,7 @@ class PostServiceImplTest {
     void updatePost_notOwner_throwsIllegalState() {
         when(postRepository.findPostWithBosses(10)).thenReturn(Optional.of(post));
 
-        PostUpdateRequest req = new PostUpdateRequest("New title", null, null, null);
+        PostUpdateRequest req = new PostUpdateRequest("New title", null, null, null, null);
 
         assertThatThrownBy(() -> postService.updatePost(10, otherUser.getAccountId(), req))
                 .isInstanceOf(IllegalStateException.class)
@@ -78,7 +78,7 @@ class PostServiceImplTest {
     void updatePost_blankTitle_throwsIllegalArgument() {
         when(postRepository.findPostWithBosses(10)).thenReturn(Optional.of(post));
 
-        PostUpdateRequest req = new PostUpdateRequest("   ", null, null, null);
+        PostUpdateRequest req = new PostUpdateRequest("   ", null, null, null ,null);
 
         assertThatThrownBy(() -> postService.updatePost(10, owner.getAccountId(), req))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -91,7 +91,7 @@ class PostServiceImplTest {
         when(postRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // Only update title, leave desc and videoLink null (don't touch)
-        PostUpdateRequest req = new PostUpdateRequest("New title", null, null, null);
+        PostUpdateRequest req = new PostUpdateRequest("New title", null, null, null, null);
 
         postService.updatePost(10, owner.getAccountId(), req);
 

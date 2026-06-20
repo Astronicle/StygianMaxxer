@@ -6,6 +6,7 @@ type PostBrowseCardProps = {
   averageRating: number | null;
   ratingCount: number;
   createdAt: string;
+  difficulty: "Fearless" | "Dire";
 };
 
 export default function PostBrowseCard({
@@ -15,14 +16,24 @@ export default function PostBrowseCard({
   averageRating,
   ratingCount,
   createdAt,
+  difficulty,
 }: PostBrowseCardProps) {
   return (
     <div className="card bg-base-200 shadow-md min-w-72 shrink-0 hover:shadow-lg transition-shadow">
       <div className="card-body gap-3">
         <h3 className="card-title text-lg line-clamp-1">{title}</h3>
 
-        {/* Stygian version badge */}
-        <span className="badge badge-outline badge-sm">{stygianName}</span>
+        {/* Stygian version + difficulty badges */}
+        <div className="flex items-center gap-2">
+          <span className="badge badge-outline badge-sm">{stygianName}</span>
+          <span
+            className={`badge badge-sm font-semibold ${
+              difficulty === "Dire" ? "badge-error" : "badge-warning"
+            }`}
+          >
+            {difficulty}
+          </span>
+        </div>
 
         <div className="flex flex-wrap gap-2 text-sm opacity-70">
           <span>By {username}</span>

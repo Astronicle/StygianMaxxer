@@ -106,6 +106,7 @@ export default function DashboardPage() {
                 postID={post.postId}
                 title={post.title}
                 description={post.stygianName}
+                difficulty={post.difficulty}
                 rating={post.averageRating ?? 0}
                 createdAt={post.createdAt}
                 onDeleted={(deletedId) =>

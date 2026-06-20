@@ -73,6 +73,7 @@ export default function PostPage() {
     title: post.title,
     description: post.description ?? "",
     createdAt: post.createdAt,
+    difficulty: post.difficulty,
     author: { username: post.account.username },
     rating: rating?.average ?? 0,
   };
