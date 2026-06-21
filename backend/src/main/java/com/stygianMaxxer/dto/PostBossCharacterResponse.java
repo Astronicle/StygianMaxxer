@@ -10,6 +10,7 @@ public record PostBossCharacterResponse(
         String weaponSlug,
         short weaponRarity,
         String weaponTypeSlug,
+        short refinement,
         Short artifactSetId,
         String artifactSetName,
         String artifactSetSlug,

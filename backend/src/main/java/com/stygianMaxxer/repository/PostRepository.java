@@ -59,7 +59,10 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             p.createdAt,
             p.difficulty,
             CAST(COALESCE(AVG(r.rating), 0.0) AS double),
-            COUNT(r.rating)
+            COUNT(r.rating),
+            CAST(COALESCE((
+                SELECT SUM(pb2.clearTime) FROM PostBoss pb2 WHERE pb2.post = p
+            ), 0) AS long)
         )
         FROM Post p
         JOIN p.account a
@@ -86,6 +89,23 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("charId")    Short charId,
             Pageable pageable
     );
+
+    // ── Per-boss summaries for a page of posts (browse cards) ──────────────────
+    // Given a list of post ids, fetches (postId, bossId, bossSlug, bossName,
+    // clearTime) for every boss in those posts as plain Object[] rows — kept
+    // as scalars (not a DTO constructor expression) so postId can ride along
+    // for grouping in the service layer. Used to attach the `bosses` list
+    // onto PostSummaryResponse after the main aggregate query above.
+    // One query regardless of page size — not N+1.
+    @Query("""
+        SELECT p.postId, b.id, b.slug, b.name, pb.clearTime
+        FROM PostBoss pb
+        JOIN pb.post p
+        JOIN pb.boss b
+        WHERE p.postId IN :postIds
+        ORDER BY p.postId, b.name
+    """)
+    List<Object[]> findBossSummariesForPosts(@Param("postIds") List<Integer> postIds);
 
     // ── Bosses killed in a post (lightweight, no character detail) ──────────────
     // Used by post summary cards (e.g. the user profile post list) to show

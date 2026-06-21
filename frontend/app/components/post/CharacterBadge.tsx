@@ -8,6 +8,7 @@ type Character = {
   weaponName?: string;
   weaponIcon?: string;
   weaponRarity?: number;
+  refinement?: number; // 1-5 (R1-R5)
   artifactSetName?: string;
   artifactSetIcon?: string;
 };
@@ -21,6 +22,7 @@ export default function CharacterBadge({
   weaponName,
   weaponIcon,
   weaponRarity,
+  refinement,
   artifactSetName,
   artifactSetIcon,
 }: Character) {
@@ -54,7 +56,12 @@ export default function CharacterBadge({
             />
           )}
           <div className="text-xs leading-tight">
-            <p className="font-medium">{weaponName}</p>
+            <p className="font-medium">
+              {weaponName}
+              {typeof refinement === "number" && (
+                <span className="opacity-60"> R{refinement}</span>
+              )}
+            </p>
             {typeof weaponRarity === "number" && (
               <p className="opacity-60">{"★".repeat(weaponRarity)}</p>
             )}

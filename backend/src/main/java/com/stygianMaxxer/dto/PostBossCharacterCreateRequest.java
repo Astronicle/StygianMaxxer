@@ -15,6 +15,11 @@ public record PostBossCharacterCreateRequest(
 
         @NotNull
         @Min(1)
+        @Max(5)
+        Short refinement,   // boxed so @Min/@Max actually fire; weapon refinement level R1-R5
+
+        @NotNull
+        @Min(1)
         @Max(4)
         Short slot,     // boxed so @Min/@Max actually fire
 

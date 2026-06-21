@@ -7,6 +7,7 @@ import {
   apiGetMyProfile,
   apiUpdatePost,
   getToken,
+  defaultRefinementForRarity,
   type PostBossUpdateEntry,
 } from "@/app/lib/api";
 
@@ -41,6 +42,7 @@ type CharacterEntry = {
   charSlug: string;
   weaponId: number | null;
   artifactSetId: number | null;
+  refinement: number;  // 1–5 (R1–R5); defaulted based on weapon rarity, user-overridable
   slot: number;
   hasSig: boolean;
   cons: number;
@@ -51,6 +53,7 @@ type BossEntry = {
   bossName: string;
   bossSlug: string;
   buildInfo: string;
+  clearTime: number;  // seconds, 0-120
   characters: CharacterEntry[];
 };
 
@@ -121,12 +124,14 @@ export default function PostEditPage() {
             bossName: b.bossName,
             bossSlug: b.bossSlug,
             buildInfo: b.buildInfo ?? "",
+            clearTime: b.clearTime,
             characters: b.characters.map((c) => ({
               charId: c.charId,
               charName: c.charName,
               charSlug: c.charSlug,
               weaponId: c.weaponId,
               artifactSetId: c.artifactSetId,
+              refinement: c.refinement,
               slot: c.slot,
               hasSig: c.hasSig,
               cons: c.cons,
@@ -154,6 +159,12 @@ export default function PostEditPage() {
     );
   }
 
+  function setClearTime(bossId: number, clearTime: number) {
+    setBossEntries((prev) =>
+      prev.map((b) => (b.bossId === bossId ? { ...b, clearTime } : b))
+    );
+  }
+
   function addCharacterToBoss(bossId: number, char: CharacterOption) {
     // Default to the highest-rarity weapon matching this character's weapon type,
     // since a weapon selection is compulsory. Artifact set is left unset so the
@@ -161,7 +172,10 @@ export default function PostEditPage() {
     const matchingWeapons = weapons
       .filter((w) => w.weaponType.id === char.weaponType.id)
       .sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
-    const defaultWeaponId = matchingWeapons.length > 0 ? matchingWeapons[0].id : null;
+    const defaultWeapon = matchingWeapons.length > 0 ? matchingWeapons[0] : null;
+    const defaultWeaponId = defaultWeapon?.id ?? null;
+    // 5★ weapons default to R1, everything else defaults to R5 — user can change it.
+    const defaultRefinement = defaultWeapon ? defaultRefinementForRarity(defaultWeapon.rarity) : 5;
 
     setBossEntries((prev) =>
       prev.map((b) => {
@@ -179,6 +193,7 @@ export default function PostEditPage() {
               charSlug: char.slug,
               weaponId: defaultWeaponId,
               artifactSetId: null,
+              refinement: defaultRefinement,
               slot: nextSlot,
               hasSig: false,
               cons: 0,
@@ -204,7 +219,7 @@ export default function PostEditPage() {
   function updateCharacterField(
     bossId: number,
     charId: number,
-    field: "cons" | "hasSig" | "weaponId" | "artifactSetId",
+    field: "cons" | "hasSig" | "weaponId" | "artifactSetId" | "refinement",
     value: number | boolean
   ) {
     setBossEntries((prev) =>
@@ -214,6 +229,25 @@ export default function PostEditPage() {
           ...b,
           characters: b.characters.map((c) =>
             c.charId === charId ? { ...c, [field]: value } : c
+          ),
+        };
+      })
+    );
+  }
+
+  // Weapon changes also re-default the refinement to match the new weapon's
+  // rarity (5★ → R1, everything else → R5), since the old refinement was
+  // chosen for a different weapon. The user can still override afterward.
+  function onWeaponChange(bossId: number, charId: number, weapon: WeaponOption) {
+    setBossEntries((prev) =>
+      prev.map((b) => {
+        if (b.bossId !== bossId) return b;
+        return {
+          ...b,
+          characters: b.characters.map((c) =>
+            c.charId === charId
+              ? { ...c, weaponId: weapon.id, refinement: defaultRefinementForRarity(weapon.rarity) }
+              : c
           ),
         };
       })
@@ -244,10 +278,12 @@ export default function PostEditPage() {
       const bosses: PostBossUpdateEntry[] = bossEntries.map((b) => ({
         bossId: b.bossId,
         buildInfo: b.buildInfo,
+        clearTime: b.clearTime,
         characters: b.characters.map((c) => ({
           charId: c.charId,
           weaponId: c.weaponId as number,
           artifactSetId: c.artifactSetId as number,
+          refinement: c.refinement,
           slot: c.slot,
           hasSig: c.hasSig,
           cons: c.cons,
@@ -271,6 +307,8 @@ export default function PostEditPage() {
       (b) =>
         b.characters.length >= 1 &&
         b.buildInfo.trim().length > 0 &&
+        b.clearTime >= 0 &&
+        b.clearTime <= 120 &&
         b.characters.every((c) => c.weaponId !== null && c.artifactSetId !== null)
     );
   const canSubmit =
@@ -393,6 +431,26 @@ export default function PostEditPage() {
                     />
                   </div>
 
+                  {/* Clear time */}
+                  <div className="form-control max-w-xs">
+                    <label className="label">
+                      <span className="label-text text-sm">Clear time (seconds)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={120}
+                      placeholder="0–120"
+                      className="input input-bordered input-sm w-full"
+                      value={boss.clearTime}
+                      onChange={(e) => {
+                        const v = Math.max(0, Math.min(120, Number(e.target.value)));
+                        setClearTime(boss.bossId, v);
+                      }}
+                      required
+                    />
+                  </div>
+
                   {/* Character picker */}
                   <div className="form-control">
                     <label className="label">
@@ -499,15 +557,36 @@ export default function PostEditPage() {
                                 <select
                                   className="select select-bordered select-xs w-44"
                                   value={entry.weaponId ?? ""}
-                                  onChange={(e) =>
-                                    updateCharacterField(boss.bossId, entry.charId, "weaponId", Number(e.target.value))
-                                  }
+                                  onChange={(e) => {
+                                    const weapon = matchingWeapons.find((w) => w.id === Number(e.target.value));
+                                    if (weapon) onWeaponChange(boss.bossId, entry.charId, weapon);
+                                  }}
                                   required
                                 >
                                   <option disabled value="">Select weapon…</option>
                                   {matchingWeapons.map((w) => (
                                     <option key={w.id} value={w.id}>
                                       {"★".repeat(w.rarity)} {w.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+
+                              {/* Refinement — required, R1–R5. Defaults to R1 for 5★ weapons,
+                                  R5 for everything else, but the user can always change it. */}
+                              <label className="flex items-center gap-1 text-sm">
+                                <span className="opacity-60">R</span>
+                                <select
+                                  className="select select-bordered select-xs w-16"
+                                  value={entry.refinement}
+                                  onChange={(e) =>
+                                    updateCharacterField(boss.bossId, entry.charId, "refinement", Number(e.target.value))
+                                  }
+                                  required
+                                >
+                                  {[1, 2, 3, 4, 5].map((r) => (
+                                    <option key={r} value={r}>
+                                      R{r}
                                     </option>
                                   ))}
                                 </select>

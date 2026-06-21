@@ -65,6 +65,7 @@ public final class PostMapper {
                 bossSlug,
                 bossName,
                 postBoss.getBuildInfo(),
+                postBoss.getClearTime(),
                 characters
         );
     }
@@ -99,6 +100,7 @@ public final class PostMapper {
                 weaponSlug,
                 weaponRarity,
                 weaponTypeSlug,
+                pbc.getRefinement(),
                 artifactSetId,
                 artifactSetName,
                 artifactSetSlug,

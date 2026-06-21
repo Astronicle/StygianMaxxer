@@ -43,6 +43,9 @@ public class PostBossCharacter {
     @Column(name = "has_sig", nullable = false)
     private boolean hasSig;
 
+    @Column(name = "refinement", nullable = false)
+    private short refinement;
+
     @Column(name = "cons", nullable = false)
     private short cons;
 

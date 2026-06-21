@@ -39,6 +39,9 @@ public class PostBoss {
     @Column(name = "build_info", nullable = false, columnDefinition = "TEXT")
     private String buildInfo;
 
+    @Column(name = "clear_time", nullable = false)
+    private short clearTime;   // seconds, 0-120
+
     @OneToMany(
             mappedBy = "postBoss",
             cascade = CascadeType.ALL,

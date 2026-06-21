@@ -1,3 +1,10 @@
+type BossSummary = {
+  bossId: number;
+  bossSlug: string;
+  bossName: string;
+  clearTime: number; // seconds, 0-120
+};
+
 type PostBrowseCardProps = {
   postId: number;
   title: string;
@@ -7,7 +14,17 @@ type PostBrowseCardProps = {
   ratingCount: number;
   createdAt: string;
   difficulty: "Fearless" | "Dire";
+  totalClearTime: number;
+  bosses: BossSummary[];
 };
+
+const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
+
+function formatClearTime(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
 
 export default function PostBrowseCard({
   title,
@@ -17,6 +34,8 @@ export default function PostBrowseCard({
   ratingCount,
   createdAt,
   difficulty,
+  totalClearTime,
+  bosses,
 }: PostBrowseCardProps) {
   return (
     <div className="card bg-base-200 shadow-md min-w-72 shrink-0 hover:shadow-lg transition-shadow">
@@ -41,13 +60,37 @@ export default function PostBrowseCard({
           <span>{new Date(createdAt).toDateString()}</span>
         </div>
 
-        {/* Rating row */}
-        <div className="flex items-center gap-1 text-sm">
-          <span>⭐</span>
-          <span className="font-medium">
-            {averageRating != null ? averageRating.toFixed(1) : "—"}
+        {/* Bosses cleared — icon + name + that boss's clear time */}
+        {bosses.length > 0 && (
+          <div className="space-y-1">
+            {bosses.map((b) => (
+              <div key={b.bossId} className="flex items-center gap-2 text-sm">
+                <img
+                  src={`${BOSS_ICON_BASE}/${b.bossSlug}/model.webp`}
+                  alt={b.bossName}
+                  className="w-6 h-6 object-contain"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <span className="flex-1 truncate">{b.bossName}</span>
+                <span className="opacity-60 text-xs">{formatClearTime(b.clearTime)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Rating + total clear time row */}
+        <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-1">
+            <span>⭐</span>
+            <span className="font-medium">
+              {averageRating != null ? averageRating.toFixed(1) : "—"}
+            </span>
+            <span className="opacity-60">({ratingCount} ratings)</span>
+          </div>
+          <span className="opacity-40">•</span>
+          <span className="flex items-center gap-1 opacity-80">
+            ⏱ {formatClearTime(totalClearTime)} total
           </span>
-          <span className="opacity-60">({ratingCount} ratings)</span>
         </div>
       </div>
     </div>

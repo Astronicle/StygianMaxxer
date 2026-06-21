@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, apiGetStygians, type Stygian } from "@/app/lib/api";
+import { getToken, apiGetStygians, defaultRefinementForRarity, type Stygian } from "@/app/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +12,7 @@ type CharacterEntry = {
   charId: number;
   weaponId: number | null;
   artifactSetId: number | null;
+  refinement: number;  // 1–5 (R1–R5); defaulted based on weapon rarity, user-overridable
   slot: number;    // 1–4, assigned in order of adding
   hasSig: boolean;
   cons: number;    // 0–6
@@ -23,6 +24,7 @@ type BossEntry = {
   bossName: string;
   bossSlug: string;
   buildInfo: string;
+  clearTime: number;  // seconds, 0-120
   characters: CharacterEntry[];
 };
 
@@ -130,6 +132,7 @@ export default function PostCreatePage() {
         bossName: b.bossName,
         bossSlug: b.bossSlug,
         buildInfo: "",
+        clearTime: 0,
         characters: [],
       }))
     );
@@ -156,6 +159,12 @@ export default function PostCreatePage() {
     );
   }
 
+  function setClearTime(bossId: number, clearTime: number) {
+    setBossEntries((prev) =>
+      prev.map((b) => (b.bossId === bossId ? { ...b, clearTime } : b))
+    );
+  }
+
   function addCharacterToBoss(bossId: number, char: CharacterOption) {
     // Default to the highest-rarity weapon matching this character's weapon type,
     // since a weapon selection is compulsory. Artifact set is left unset so the
@@ -163,7 +172,10 @@ export default function PostCreatePage() {
     const matchingWeapons = weapons
       .filter((w) => w.weaponType.id === char.weaponType.id)
       .sort((a, b) => b.rarity - a.rarity || a.name.localeCompare(b.name));
-    const defaultWeaponId = matchingWeapons.length > 0 ? matchingWeapons[0].id : null;
+    const defaultWeapon = matchingWeapons.length > 0 ? matchingWeapons[0] : null;
+    const defaultWeaponId = defaultWeapon?.id ?? null;
+    // 5★ weapons default to R1, everything else defaults to R5 — user can change it.
+    const defaultRefinement = defaultWeapon ? defaultRefinementForRarity(defaultWeapon.rarity) : 5;
 
     setBossEntries((prev) =>
       prev.map((b) => {
@@ -179,6 +191,7 @@ export default function PostCreatePage() {
               charId: char.id,
               weaponId: defaultWeaponId,
               artifactSetId: null,
+              refinement: defaultRefinement,
               slot: nextSlot,
               hasSig: false,
               cons: 0,
@@ -205,7 +218,7 @@ export default function PostCreatePage() {
   function updateCharacterField(
     bossId: number,
     charId: number,
-    field: "cons" | "hasSig" | "weaponId" | "artifactSetId",
+    field: "cons" | "hasSig" | "weaponId" | "artifactSetId" | "refinement",
     value: number | boolean
   ) {
     setBossEntries((prev) =>
@@ -215,6 +228,25 @@ export default function PostCreatePage() {
           ...b,
           characters: b.characters.map((c) =>
             c.charId === charId ? { ...c, [field]: value } : c
+          ),
+        };
+      })
+    );
+  }
+
+  // Weapon changes also re-default the refinement to match the new weapon's
+  // rarity (5★ → R1, everything else → R5), since the old refinement was
+  // chosen for a different weapon. The user can still override afterward.
+  function onWeaponChange(bossId: number, charId: number, weapon: WeaponOption) {
+    setBossEntries((prev) =>
+      prev.map((b) => {
+        if (b.bossId !== bossId) return b;
+        return {
+          ...b,
+          characters: b.characters.map((c) =>
+            c.charId === charId
+              ? { ...c, weaponId: weapon.id, refinement: defaultRefinementForRarity(weapon.rarity) }
+              : c
           ),
         };
       })
@@ -256,10 +288,12 @@ export default function PostCreatePage() {
         bosses: activeBosses.map((b) => ({
           bossId: b.bossId,
           buildInfo: b.buildInfo,
+          clearTime: b.clearTime,
           characters: b.characters.map((c) => ({
             charId: c.charId,
             weaponId: c.weaponId as number,
             artifactSetId: c.artifactSetId as number,
+            refinement: c.refinement,
             slot: c.slot,
             hasSig: c.hasSig,
             cons: c.cons,
@@ -302,14 +336,16 @@ export default function PostCreatePage() {
   const selectedStygian = stygians.find((s) => s.id === selectedStygianId);
   const activeBosses = bossEntries.filter((b) => activeBossIds.has(b.bossId));
 
-  // Validation: at least 1 boss selected, and every active boss has ≥1 character + buildInfo,
-  // and every character has a weapon + artifact set selected (both compulsory)
+  // Validation: at least 1 boss selected, and every active boss has ≥1 character + buildInfo
+  // + a valid clear time, and every character has a weapon + artifact set selected (both compulsory)
   const bossesValid =
     activeBosses.length >= 1 &&
     activeBosses.every(
       (b) =>
         b.characters.length >= 1 &&
         b.buildInfo.trim().length > 0 &&
+        b.clearTime >= 0 &&
+        b.clearTime <= 120 &&
         b.characters.every((c) => c.weaponId !== null && c.artifactSetId !== null)
     );
   const canSubmit =
@@ -438,10 +474,14 @@ export default function PostCreatePage() {
                       allWeapons={weapons}
                       allArtifactSets={artifactSets}
                       onBuildInfoChange={(v) => setBuildInfo(boss.bossId, v)}
+                      onClearTimeChange={(v) => setClearTime(boss.bossId, v)}
                       onAddCharacter={(c) => addCharacterToBoss(boss.bossId, c)}
                       onRemoveCharacter={(charId) => removeCharacterFromBoss(boss.bossId, charId)}
                       onUpdateCharacter={(charId, field, value) =>
                         updateCharacterField(boss.bossId, charId, field, value)
+                      }
+                      onWeaponChange={(charId, weapon) =>
+                        onWeaponChange(boss.bossId, charId, weapon)
                       }
                     />
                   )}
@@ -479,13 +519,15 @@ type BossSectionProps = {
   allWeapons: WeaponOption[];
   allArtifactSets: ArtifactSetOption[];
   onBuildInfoChange: (v: string) => void;
+  onClearTimeChange: (v: number) => void;
   onAddCharacter: (c: CharacterOption) => void;
   onRemoveCharacter: (charId: number) => void;
   onUpdateCharacter: (
     charId: number,
-    field: "cons" | "hasSig" | "weaponId" | "artifactSetId",
+    field: "cons" | "hasSig" | "weaponId" | "artifactSetId" | "refinement",
     value: number | boolean
   ) => void;
+  onWeaponChange: (charId: number, weapon: WeaponOption) => void;
 };
 
 function BossSection({
@@ -494,9 +536,11 @@ function BossSection({
   allWeapons,
   allArtifactSets,
   onBuildInfoChange,
+  onClearTimeChange,
   onAddCharacter,
   onRemoveCharacter,
   onUpdateCharacter,
+  onWeaponChange,
 }: BossSectionProps) {
   const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
   const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
@@ -530,6 +574,26 @@ function BossSection({
             className="input input-bordered input-sm w-full"
             value={boss.buildInfo}
             onChange={(e) => onBuildInfoChange(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Clear time */}
+        <div className="form-control max-w-xs">
+          <label className="label">
+            <span className="label-text text-sm">Clear time (seconds)</span>
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={120}
+            placeholder="0–120"
+            className="input input-bordered input-sm w-full"
+            value={boss.clearTime}
+            onChange={(e) => {
+              const v = Math.max(0, Math.min(120, Number(e.target.value)));
+              onClearTimeChange(v);
+            }}
             required
           />
         </div>
@@ -638,15 +702,36 @@ function BossSection({
                       <select
                         className="select select-bordered select-xs w-44"
                         value={entry.weaponId ?? ""}
-                        onChange={(e) =>
-                          onUpdateCharacter(entry.charId, "weaponId", Number(e.target.value))
-                        }
+                        onChange={(e) => {
+                          const weapon = matchingWeapons.find((w) => w.id === Number(e.target.value));
+                          if (weapon) onWeaponChange(entry.charId, weapon);
+                        }}
                         required
                       >
                         <option disabled value="">Select weapon…</option>
                         {matchingWeapons.map((w) => (
                           <option key={w.id} value={w.id}>
                             {"★".repeat(w.rarity)} {w.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    {/* Refinement — required, R1–R5. Defaults to R1 for 5★ weapons,
+                        R5 for everything else, but the user can always change it. */}
+                    <label className="flex items-center gap-1 text-sm">
+                      <span className="opacity-60">R</span>
+                      <select
+                        className="select select-bordered select-xs w-16"
+                        value={entry.refinement}
+                        onChange={(e) =>
+                          onUpdateCharacter(entry.charId, "refinement", Number(e.target.value))
+                        }
+                        required
+                      >
+                        {[1, 2, 3, 4, 5].map((r) => (
+                          <option key={r} value={r}>
+                            R{r}
                           </option>
                         ))}
                       </select>

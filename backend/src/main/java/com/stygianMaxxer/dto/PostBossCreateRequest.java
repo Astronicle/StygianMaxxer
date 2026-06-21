@@ -12,6 +12,11 @@ public record PostBossCreateRequest(
         @NotBlank
         String buildInfo,
 
+        @NotNull
+        @Min(0)
+        @Max(120)
+        Short clearTime,   // boxed so @Min/@Max actually fire; seconds taken to clear this boss
+
         @NotEmpty
         @Size(min = 1, max = 4)
         List<@Valid PostBossCharacterCreateRequest> characters

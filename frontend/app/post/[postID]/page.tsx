@@ -91,6 +91,7 @@ export default function PostPage() {
     name: b.bossName,
     icon: bossIcon(b.bossSlug),
     buildInfo: b.buildInfo ?? undefined,
+    clearTime: b.clearTime,
     characters: b.characters.map((c) => ({
       id: c.charId,
       name: c.charName,
@@ -101,6 +102,7 @@ export default function PostPage() {
       weaponName: c.weaponName,
       weaponIcon: weaponIcon(c.weaponTypeSlug, c.weaponSlug),
       weaponRarity: c.weaponRarity,
+      refinement: c.refinement,
       artifactSetName: c.artifactSetName,
       artifactSetIcon: artifactSetIcon(c.artifactSetSlug),
     })),

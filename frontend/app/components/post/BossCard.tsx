@@ -1,14 +1,36 @@
 import CharacterBadge from "./CharacterBadge";
 
+type Character = {
+  id: number;
+  name: string;
+  icon: string;
+  element: string;
+  cons: number;
+  hasSig: boolean;
+  weaponName?: string;
+  weaponIcon?: string;
+  weaponRarity?: number;
+  refinement?: number;
+  artifactSetName?: string;
+  artifactSetIcon?: string;
+};
+
 type Boss = {
   id: number;
   name: string;
   icon: string;
   buildInfo?: string;
-  characters: any[];
+  clearTime?: number; // seconds, 0-120
+  characters: Character[];
 };
 
-export default function BossCard({ name, icon, buildInfo, characters }: Boss) {
+function formatClearTime(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+export default function BossCard({ name, icon, buildInfo, clearTime, characters }: Boss) {
   return (
     <div className="card bg-base-200 shadow-md">
       <div className="card-body gap-4">
@@ -16,6 +38,11 @@ export default function BossCard({ name, icon, buildInfo, characters }: Boss) {
         <div className="flex items-center gap-3">
           <img src={icon} alt={name} className="w-12 h-12 rounded-md" />
           <h3 className="text-lg font-semibold">{name}</h3>
+          {typeof clearTime === "number" && (
+            <span className="badge badge-ghost ml-auto">
+              ⏱ {formatClearTime(clearTime)}
+            </span>
+          )}
         </div>
 
         {/* Build info */}

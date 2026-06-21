@@ -68,6 +68,7 @@ public class PostServiceImpl implements PostService {
             PostBoss postBoss = PostBoss.builder()
                     .boss(boss)
                     .buildInfo(bossReq.buildInfo())
+                    .clearTime(bossReq.clearTime())
                     .build();
 
             java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
@@ -92,6 +93,7 @@ public class PostServiceImpl implements PostService {
                         .weapon(weapon)
                         .artifactSet(artifactSet)
                         .hasSig(charReq.hasSig())
+                        .refinement(charReq.refinement())
                         .cons(charReq.cons())
                         .build();
 
@@ -145,7 +147,35 @@ public class PostServiceImpl implements PostService {
             Short charId,
             Pageable pageable
     ) {
-        return postRepository.findPostSummaries(stygianId, accountId, bossId, charId, pageable);
+        Page<PostSummaryResponse> page =
+                postRepository.findPostSummaries(stygianId, accountId, bossId, charId, pageable);
+
+        if (page.isEmpty()) {
+            return page;
+        }
+
+        List<Integer> postIds = page.getContent().stream()
+                .map(PostSummaryResponse::postId)
+                .toList();
+
+        // One extra query for the whole page — groups (bossId, bossSlug,
+        // bossName, clearTime) by postId so each row can show its bosses.
+        java.util.Map<Integer, List<PostBossSummary>> bossesByPostId = new java.util.LinkedHashMap<>();
+        for (Object[] row : postRepository.findBossSummariesForPosts(postIds)) {
+            Integer postId    = (Integer) row[0];
+            Short   bId       = (Short) row[1];
+            String  bSlug     = (String) row[2];
+            String  bName     = (String) row[3];
+            short   clearTime = (Short) row[4];
+
+            bossesByPostId
+                    .computeIfAbsent(postId, k -> new java.util.ArrayList<>())
+                    .add(new PostBossSummary(bId, bSlug, bName, clearTime));
+        }
+
+        return page.map(summary ->
+                summary.withBosses(bossesByPostId.getOrDefault(summary.postId(), List.of()))
+        );
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
@@ -200,6 +230,7 @@ public class PostServiceImpl implements PostService {
                 PostBoss postBoss = PostBoss.builder()
                         .boss(boss)
                         .buildInfo(bossReq.buildInfo())
+                        .clearTime(bossReq.clearTime())
                         .build();
 
                 java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
@@ -224,6 +255,7 @@ public class PostServiceImpl implements PostService {
                             .weapon(weapon)
                             .artifactSet(artifactSet)
                             .hasSig(charReq.hasSig())
+                            .refinement(charReq.refinement())
                             .cons(charReq.cons())
                             .build();
 

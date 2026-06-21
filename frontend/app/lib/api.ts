@@ -128,7 +128,15 @@ export async function apiGetAccounts(page = 0, size = 24): Promise<Page<AccountS
 }
 
 // ─── Posts — browse ───────────────────────────────────────────────────────────
-// Backend DTO: PostSummaryResponse { postId, title, username, stygianName, createdAt, averageRating, ratingCount }
+// Backend DTO: PostSummaryResponse { postId, title, username, stygianName, createdAt, averageRating, ratingCount, totalClearTime, bosses }
+
+export interface PostBossSummary {
+  bossId: number;     // backend: Short
+  bossSlug: string;   // used to build Supabase icon URL
+  bossName: string;
+  clearTime: number;  // backend: short, seconds 0-120
+}
+
 export interface PostSummary {
   postId: number;
   title: string;
@@ -138,6 +146,8 @@ export interface PostSummary {
   averageRating: number | null; // null if no ratings yet
   ratingCount: number;          // NOTE: backend returns Long — JS treats it as number fine
   difficulty: "Fearless" | "Dire";
+  totalClearTime: number;       // sum of every boss's clearTime in this post, in seconds
+  bosses: PostBossSummary[];
 }
 
 // Generic Spring Page wrapper
@@ -170,6 +180,7 @@ export interface PostBossCharacter {
   weaponSlug: string;      // used to build Supabase icon URL
   weaponRarity: number;    // backend: short, 1-5
   weaponTypeSlug: string;  // e.g. "sword" — icon path is <base>/<weaponTypeSlug>/<weaponSlug>.png
+  refinement: number;      // backend: short, 1-5 (R1-R5)
   artifactSetId: number;   // backend: Short
   artifactSetName: string;
   artifactSetSlug: string; // used to build Supabase icon URL
@@ -183,6 +194,7 @@ export interface PostBoss {
   bossSlug: string;     // used to build Supabase icon URL
   bossName: string;
   buildInfo: string | null;
+  clearTime: number;    // backend: short, seconds 0-120
   characters: PostBossCharacter[];
 }
 
@@ -213,10 +225,12 @@ export async function apiDeletePost(postId: number): Promise<void> {
 export interface PostBossUpdateEntry {
   bossId: number;
   buildInfo: string;
+  clearTime: number;
   characters: {
     charId: number;
     weaponId: number;
     artifactSetId: number;
+    refinement: number;
     slot: number;
     hasSig: boolean;
     cons: number;
@@ -325,6 +339,13 @@ export interface Weapon {
   name: string;
   rarity: number; // 1-5
   weaponType: { id: number; slug: string; name: string };
+}
+
+// Default refinement convention: 5★ weapons (the rare ones, usually limited)
+// default to R1; everything 4★ and below defaults to R5. Users can always
+// override this — it's just the sensible starting point.
+export function defaultRefinementForRarity(rarity: number): number {
+  return rarity >= 5 ? 1 : 5;
 }
 
 // GET /api/weapons  (public)

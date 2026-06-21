@@ -8,6 +8,7 @@ public record PostBossResponse(
         String bossSlug,   // added — useful for client-side routing
         String bossName,
         String buildInfo,
+        short clearTime,   // seconds, 0-120
 
         List<PostBossCharacterResponse> characters
 ) {}
