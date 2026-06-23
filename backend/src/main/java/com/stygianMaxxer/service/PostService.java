@@ -7,9 +7,11 @@ import com.stygianMaxxer.dto.PostResponse;
 import com.stygianMaxxer.dto.PostSummaryResponse;
 import com.stygianMaxxer.dto.PostUpdateRequest;
 import com.stygianMaxxer.dto.RatingSummaryResponse;
+import com.stygianMaxxer.model.Difficulty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PostService {
@@ -23,6 +25,15 @@ public interface PostService {
             Integer accountId,
             Short bossId,
             Short charId,
+            Difficulty difficulty,
+            BigDecimal minCost,
+            BigDecimal maxCost,
+            Integer minTime,
+            Integer maxTime,
+            List<Short> charInclude,
+            String includeMode,     // "AND" or "OR"; ignored when charInclude is empty
+            List<Short> charExclude,
+            Boolean allBossesOnly,  // stygian page: post must clear every boss in the stygian
             Pageable pageable
     );
 

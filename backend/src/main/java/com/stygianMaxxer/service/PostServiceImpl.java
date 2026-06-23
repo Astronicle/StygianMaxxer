@@ -72,8 +72,9 @@ public class PostServiceImpl implements PostService {
                     .build();
 
             java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
+            java.math.BigDecimal bossCost = java.math.BigDecimal.ZERO;
 
-            bossReq.characters().forEach(charReq -> {
+            for (var charReq : bossReq.characters()) {
 
                 if (!seenCharIds.add(charReq.charId())) {
                     throw new IllegalArgumentException(
@@ -99,7 +100,13 @@ public class PostServiceImpl implements PostService {
 
                 pbc.setSlot(charReq.slot());
                 postBoss.addCharacter(pbc);
-            });
+
+                bossCost = bossCost.add(
+                        CostCalculator.characterSlotCost(character, charReq.cons(), weapon, charReq.refinement())
+                );
+            }
+
+            postBoss.setCost(bossCost);
 
             post.addBoss(postBoss);
         });
@@ -145,10 +152,22 @@ public class PostServiceImpl implements PostService {
             Integer accountId,
             Short bossId,
             Short charId,
+            Difficulty difficulty,
+            java.math.BigDecimal minCost,
+            java.math.BigDecimal maxCost,
+            Integer minTime,
+            Integer maxTime,
+            List<Short> charInclude,
+            String includeMode,
+            List<Short> charExclude,
+            Boolean allBossesOnly,
             Pageable pageable
     ) {
-        Page<PostSummaryResponse> page =
-                postRepository.findPostSummaries(stygianId, accountId, bossId, charId, pageable);
+        Page<PostSummaryResponse> page = postRepository.findPostSummaries(
+                stygianId, accountId, bossId, charId,
+                difficulty, minCost, maxCost, minTime, maxTime,
+                pageable
+        );
 
         if (page.isEmpty()) {
             return page;
@@ -158,24 +177,131 @@ public class PostServiceImpl implements PostService {
                 .map(PostSummaryResponse::postId)
                 .toList();
 
-        // One extra query for the whole page — groups (bossId, bossSlug,
-        // bossName, clearTime) by postId so each row can show its bosses.
+        // ── Batch-fetch character icons for every boss across this page ─────────
+        java.util.Map<String, List<PostBossCharacterIcon>> charsByPostBoss = new java.util.LinkedHashMap<>();
+        for (Object[] row : postRepository.findCharacterIconsForAllBossesInPosts(postIds)) {
+            Integer postId = (Integer) row[0];
+            Short   bId    = (Short)   row[1];
+            Short   cId    = (Short)   row[2];
+            String  cSlug  = (String)  row[3];
+            String  cName  = (String)  row[4];
+
+            String key = postId + ":" + bId;
+            charsByPostBoss
+                    .computeIfAbsent(key, k -> new java.util.ArrayList<>())
+                    .add(new PostBossCharacterIcon(cId, cSlug, cName));
+        }
+
+        // ── Batch-fetch boss rows (clearTime, cost) for this page ───────────────
         java.util.Map<Integer, List<PostBossSummary>> bossesByPostId = new java.util.LinkedHashMap<>();
         for (Object[] row : postRepository.findBossSummariesForPosts(postIds)) {
-            Integer postId    = (Integer) row[0];
-            Short   bId       = (Short) row[1];
-            String  bSlug     = (String) row[2];
-            String  bName     = (String) row[3];
-            short   clearTime = (Short) row[4];
+            Integer              postId    = (Integer)              row[0];
+            Short                bId       = (Short)                row[1];
+            String               bSlug     = (String)               row[2];
+            String               bName     = (String)               row[3];
+            short                clearTime = (Short)                row[4];
+            java.math.BigDecimal cost      = (java.math.BigDecimal) row[5];
+
+            List<PostBossCharacterIcon> chars =
+                    charsByPostBoss.getOrDefault(postId + ":" + bId, List.of());
 
             bossesByPostId
                     .computeIfAbsent(postId, k -> new java.util.ArrayList<>())
-                    .add(new PostBossSummary(bId, bSlug, bName, clearTime));
+                    .add(new PostBossSummary(bId, bSlug, bName, clearTime, cost, chars));
         }
 
-        return page.map(summary ->
+        page = page.map(summary ->
                 summary.withBosses(bossesByPostId.getOrDefault(summary.postId(), List.of()))
         );
+
+        // ── Service-layer post-filters (dynamic predicates) ─────────────────────
+        boolean hasInclude = charInclude != null && !charInclude.isEmpty();
+        boolean hasExclude = charExclude != null && !charExclude.isEmpty();
+        boolean allBosses  = Boolean.TRUE.equals(allBossesOnly) && stygianId != null;
+
+        if (hasInclude || hasExclude || allBosses) {
+            // All char IDs used per post, across all bosses
+            java.util.Map<Integer, java.util.Set<Short>> charIdsByPost = new java.util.HashMap<>();
+            charsByPostBoss.forEach((key, chars) -> {
+                int colon = key.indexOf(':');
+                Integer postId = Integer.parseInt(key.substring(0, colon));
+                chars.forEach(c -> charIdsByPost
+                        .computeIfAbsent(postId, k -> new java.util.HashSet<>())
+                        .add(c.charId()));
+            });
+
+            // Boss IDs present in each post
+            java.util.Map<Integer, java.util.Set<Short>> bossIdsByPost = new java.util.HashMap<>();
+            bossesByPostId.forEach((postId, bosses) -> {
+                java.util.Set<Short> ids = new java.util.HashSet<>();
+                bosses.forEach(b -> ids.add(b.bossId()));
+                bossIdsByPost.put(postId, ids);
+            });
+
+            // Actual boss IDs required by this stygian for allBossesOnly
+            final java.util.Set<Short> stygianBossIds = new java.util.HashSet<>();
+            if (allBosses) {
+                stygianBossIds.addAll(stygianBossRepository.findBossIdsByStygianId(stygianId));
+            }
+
+            java.util.List<PostSummaryResponse> filtered = new java.util.ArrayList<>();
+            for (PostSummaryResponse summary : page.getContent()) {
+                Integer postId    = summary.postId();
+                java.util.Set<Short> postChars  = charIdsByPost.getOrDefault(postId, java.util.Set.of());
+                java.util.Set<Short> postBosses = bossIdsByPost.getOrDefault(postId, java.util.Set.of());
+
+                if (hasInclude) {
+                    java.util.Set<Short> needed = new java.util.HashSet<>(charInclude);
+                    boolean passes = "OR".equalsIgnoreCase(includeMode)
+                            ? needed.stream().anyMatch(postChars::contains)
+                            : postChars.containsAll(needed);
+                    if (!passes) continue;
+                }
+
+                if (hasExclude) {
+                    if (charExclude.stream().anyMatch(postChars::contains)) continue;
+                }
+
+                if (allBosses && !postBosses.containsAll(stygianBossIds)) {
+                    continue;
+                }
+
+                filtered.add(summary);
+            }
+
+            page = new org.springframework.data.domain.PageImpl<>(
+                    filtered,
+                    pageable,
+                    filtered.size() < pageable.getPageSize()
+                            ? (long) pageable.getOffset() + filtered.size()
+                            : page.getTotalElements()
+            );
+        }
+
+        // bossClear: attach this-boss-only data when bossId filter is active
+        if (bossId != null) {
+            final java.util.Map<Integer, List<PostBossSummary>> finalBosses = bossesByPostId;
+            page = page.map(summary -> {
+                PostBossSummary thisBoss = finalBosses
+                        .getOrDefault(summary.postId(), List.of())
+                        .stream()
+                        .filter(b -> bossId.equals(b.bossId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (thisBoss == null) return summary;
+
+                return summary.withBossClear(
+                        new PostBossClearSummary(
+                                thisBoss.clearTime(),
+                                thisBoss.cost(),
+                                thisBoss.characters()
+                        )
+                );
+            });
+        }
+
+        return page;
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
@@ -234,8 +360,9 @@ public class PostServiceImpl implements PostService {
                         .build();
 
                 java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
+                java.math.BigDecimal bossCost = java.math.BigDecimal.ZERO;
 
-                bossReq.characters().forEach(charReq -> {
+                for (var charReq : bossReq.characters()) {
 
                     if (!seenCharIds.add(charReq.charId())) {
                         throw new IllegalArgumentException(
@@ -261,7 +388,13 @@ public class PostServiceImpl implements PostService {
 
                     pbc.setSlot(charReq.slot());
                     postBoss.addCharacter(pbc);
-                });
+
+                    bossCost = bossCost.add(
+                            CostCalculator.characterSlotCost(character, charReq.cons(), weapon, charReq.refinement())
+                    );
+                }
+
+                postBoss.setCost(bossCost);
 
                 post.addBoss(postBoss);
             });

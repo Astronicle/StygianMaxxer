@@ -49,6 +49,7 @@ public class WeaponServiceImpl implements WeaponService {
                 weapon.getSlug(),
                 weapon.getName(),
                 weapon.getRarity(),
+                weapon.isLimited(),
                 new LookupRef(
                         weapon.getWeaponType().getId(),
                         weapon.getWeaponType().getSlug(),

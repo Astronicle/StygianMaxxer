@@ -9,7 +9,9 @@ import com.stygianMaxxer.model.PostBoss;
 import com.stygianMaxxer.model.PostBossCharacter;
 import com.stygianMaxxer.model.Stygian;
 import com.stygianMaxxer.model.Weapon;
+import com.stygianMaxxer.service.CostCalculator;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public final class PostMapper {
@@ -66,6 +68,7 @@ public final class PostMapper {
                 bossName,
                 postBoss.getBuildInfo(),
                 postBoss.getClearTime(),
+                postBoss.getCost(),
                 characters
         );
     }
@@ -74,17 +77,26 @@ public final class PostMapper {
         if (pbc == null) return null;
 
         Character character = pbc.getCharacter();
-        Short  charId   = character != null ? character.getId()   : null;
-        String charName = character != null ? character.getName() : null;
-        String charSlug = character != null ? character.getSlug() : null;
+        Short   charId      = character != null ? character.getId()      : null;
+        String  charName    = character != null ? character.getName()    : null;
+        String  charSlug    = character != null ? character.getSlug()    : null;
+        short   charRarity  = character != null ? character.getRarity()  : 0;
+        boolean charLimited = character != null && character.isLimited();
+        BigDecimal characterCost = character != null
+                ? CostCalculator.characterCost(character, pbc.getCons())
+                : BigDecimal.ZERO;
 
         Weapon weapon = pbc.getWeapon();
-        Short  weaponId       = weapon != null ? weapon.getId()   : null;
-        String weaponName     = weapon != null ? weapon.getName() : null;
-        String weaponSlug     = weapon != null ? weapon.getSlug() : null;
-        short  weaponRarity   = weapon != null ? weapon.getRarity() : 0;
-        String weaponTypeSlug = (weapon != null && weapon.getWeaponType() != null)
+        Short   weaponId       = weapon != null ? weapon.getId()      : null;
+        String  weaponName     = weapon != null ? weapon.getName()    : null;
+        String  weaponSlug     = weapon != null ? weapon.getSlug()    : null;
+        short   weaponRarity   = weapon != null ? weapon.getRarity()  : 0;
+        boolean weaponLimited  = weapon != null && weapon.isLimited();
+        String  weaponTypeSlug = (weapon != null && weapon.getWeaponType() != null)
                 ? weapon.getWeaponType().getSlug() : null;
+        BigDecimal weaponCost = weapon != null
+                ? CostCalculator.weaponCost(weapon, pbc.getRefinement())
+                : BigDecimal.ZERO;
 
         ArtifactSet artifactSet = pbc.getArtifactSet();
         Short  artifactSetId   = artifactSet != null ? artifactSet.getId()   : null;
@@ -95,11 +107,16 @@ public final class PostMapper {
                 charId,
                 charName,
                 charSlug,
+                charRarity,
+                charLimited,
+                characterCost,
                 weaponId,
                 weaponName,
                 weaponSlug,
                 weaponRarity,
                 weaponTypeSlug,
+                weaponLimited,
+                weaponCost,
                 pbc.getRefinement(),
                 artifactSetId,
                 artifactSetName,

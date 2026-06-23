@@ -57,6 +57,7 @@ public class CharacterServiceImpl implements CharacterService {
                 character.getSlug(),
                 character.getName(),
                 character.getRarity(),
+                character.isLimited(),
                 new LookupRef(
                         character.getElement().getId(),
                         character.getElement().getSlug(),

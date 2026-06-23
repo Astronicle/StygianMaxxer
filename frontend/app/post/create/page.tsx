@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, apiGetStygians, defaultRefinementForRarity, type Stygian } from "@/app/lib/api";
+import {
+  getToken,
+  apiGetStygians,
+  defaultRefinementForRarity,
+  calculateCharacterCost,
+  calculateWeaponCost,
+  type Stygian,
+} from "@/app/lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +41,7 @@ type CharacterOption = {
   slug: string;
   name: string;
   rarity: number;
+  isLimited: boolean;
   element: { id: number; slug: string; name: string };
   weaponType: { id: number; slug: string; name: string };
 };
@@ -44,6 +52,7 @@ type WeaponOption = {
   slug: string;
   name: string;
   rarity: number;
+  isLimited: boolean;
   weaponType: { id: number; slug: string; name: string };
 };
 
@@ -549,6 +558,20 @@ function BossSection({
 
   const selectedCharIds = new Set(boss.characters.map((c) => c.charId));
 
+  // Live cost calculation — mirrors the backend CostCalculator exactly.
+  // Each entry contributes characterCost + weaponCost; the boss total is
+  // the sum across every filled slot. Only slots with both a character and
+  // a resolved weapon contribute (per the spec: "empty or incomplete slots
+  // only count the parts you have actually selected").
+  const costBreakdown = boss.characters.map((entry) => {
+    const char = allCharacters.find((c) => c.id === entry.charId);
+    const weapon = allWeapons.find((w) => w.id === entry.weaponId);
+    const characterCost = char ? calculateCharacterCost(char.rarity, char.isLimited, entry.cons) : 0;
+    const weaponCost = weapon ? calculateWeaponCost(weapon.rarity, weapon.isLimited, entry.refinement) : 0;
+    return { entry, char, weapon, characterCost, weaponCost, slotCost: characterCost + weaponCost };
+  });
+  const totalCost = costBreakdown.reduce((sum, b) => sum + b.slotCost, 0);
+
   return (
     <div className="card bg-base-200 shadow-md">
       <div className="card-body gap-4">
@@ -578,24 +601,85 @@ function BossSection({
           />
         </div>
 
-        {/* Clear time */}
-        <div className="form-control max-w-xs">
-          <label className="label">
-            <span className="label-text text-sm">Clear time (seconds)</span>
-          </label>
-          <input
-            type="number"
-            min={0}
-            max={120}
-            placeholder="0–120"
-            className="input input-bordered input-sm w-full"
-            value={boss.clearTime}
-            onChange={(e) => {
-              const v = Math.max(0, Math.min(120, Number(e.target.value)));
-              onClearTimeChange(v);
-            }}
-            required
-          />
+        <div className="flex items-start gap-4 flex-wrap">
+          {/* Clear time */}
+          <div className="form-control max-w-xs">
+            <label className="label">
+              <span className="label-text text-sm">Clear time (seconds)</span>
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={120}
+              placeholder="0–120"
+              className="input input-bordered input-sm w-full"
+              value={boss.clearTime}
+              onChange={(e) => {
+                const v = Math.max(0, Math.min(120, Number(e.target.value)));
+                onClearTimeChange(v);
+              }}
+              required
+            />
+          </div>
+
+          {/* Cost (auto) — hover to see the line-by-line breakdown */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text text-sm flex items-center gap-1">
+                Cost (auto)
+                <span className="opacity-50 cursor-help" title="Standardizes team investment level. Limited 5★ = cons+1, standard 5★ = (cons+1)×0.5. Same for weapon refinement. 4★ and below are always 0 cost.">ⓘ</span>
+              </span>
+            </label>
+            <div className="dropdown dropdown-hover">
+              <div
+                tabIndex={0}
+                className="input input-bordered input-sm flex items-center justify-center font-semibold cursor-default w-20"
+              >
+                {totalCost}
+              </div>
+              {costBreakdown.length > 0 && (
+                <div
+                  tabIndex={0}
+                  className="dropdown-content z-10 menu p-3 shadow-lg bg-base-300 rounded-box w-72 mt-1"
+                >
+                  <p className="text-xs font-bold uppercase opacity-60 mb-2">Cost breakdown</p>
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {costBreakdown.map(({ entry, char, weapon }) => (
+                      <div key={entry.charId} className="text-xs">
+                        <div className="flex justify-between">
+                          <span className="font-medium">
+                            {char?.name ?? "?"} C{entry.cons}
+                          </span>
+                          <span className={char && char.rarity >= 5 ? "text-warning font-semibold" : "opacity-50"}>
+                            {calculateCharacterCost(char?.rarity ?? 0, char?.isLimited ?? false, entry.cons) || 0}
+                          </span>
+                        </div>
+                        <p className="opacity-50">
+                          {char ? `${char.rarity}★ ${char.isLimited ? "Limited" : "Standard"}` : "—"}
+                        </p>
+                        <div className="flex justify-between mt-1">
+                          <span className="font-medium">
+                            {weapon?.name ?? "?"} R{entry.refinement}
+                          </span>
+                          <span className={weapon && weapon.rarity >= 5 ? "text-warning font-semibold" : "opacity-50"}>
+                            {calculateWeaponCost(weapon?.rarity ?? 0, weapon?.isLimited ?? false, entry.refinement) || 0}
+                          </span>
+                        </div>
+                        <p className="opacity-50">
+                          {weapon ? `${weapon.rarity}★ ${weapon.isLimited ? "Limited" : "Free"}` : "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="divider my-1" />
+                  <div className="flex justify-between text-sm font-bold">
+                    <span>Total</span>
+                    <span>{totalCost}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Character picker */}

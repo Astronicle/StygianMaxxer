@@ -92,6 +92,7 @@ export default function PostPage() {
     icon: bossIcon(b.bossSlug),
     buildInfo: b.buildInfo ?? undefined,
     clearTime: b.clearTime,
+    cost: b.cost,
     characters: b.characters.map((c) => ({
       id: c.charId,
       name: c.charName,

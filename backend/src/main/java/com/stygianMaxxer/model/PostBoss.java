@@ -42,6 +42,9 @@ public class PostBoss {
     @Column(name = "clear_time", nullable = false)
     private short clearTime;   // seconds, 0-120
 
+    @Column(name = "cost", nullable = false, precision = 4, scale = 1)
+    private java.math.BigDecimal cost;   // auto-calculated team cost — see CostCalculator
+
     @OneToMany(
             mappedBy = "postBoss",
             cascade = CascadeType.ALL,

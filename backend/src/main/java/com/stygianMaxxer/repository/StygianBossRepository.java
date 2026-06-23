@@ -4,6 +4,7 @@ import com.stygianMaxxer.model.StygianBoss;
 import com.stygianMaxxer.model.StygianBossId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -20,4 +21,9 @@ public interface StygianBossRepository extends JpaRepository<StygianBoss, Stygia
     List<StygianBoss> findByStygian_IdOrderBySlotAsc(Short stygianId);
 
     boolean existsByStygian_IdAndBoss_Id(Short stygianId, Short bossId);
+
+    // Returns the boss IDs for a stygian — used by the allBossesOnly post-filter
+    // in PostServiceImpl. Selects only the id field to avoid lazy-loading Boss entities.
+    @Query("SELECT sb.id.bossId FROM StygianBoss sb WHERE sb.id.stygianId = :stygianId")
+    List<Short> findBossIdsByStygianId(@Param("stygianId") Short stygianId);
 }

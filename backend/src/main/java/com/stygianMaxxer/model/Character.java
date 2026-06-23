@@ -24,6 +24,9 @@ public class Character {
     @Column(name = "rarity", nullable = false)
     private short rarity;
 
+    @Column(name = "is_limited", nullable = false)
+    private boolean limited;   // banner classification — drives team cost formula
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "wep_type_id", nullable = false)
     private WeaponType weaponType;

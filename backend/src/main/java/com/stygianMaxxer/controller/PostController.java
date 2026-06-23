@@ -7,12 +7,16 @@ import com.stygianMaxxer.dto.PostResponse;
 import com.stygianMaxxer.dto.PostSummaryResponse;
 import com.stygianMaxxer.dto.PostUpdateRequest;
 import com.stygianMaxxer.dto.RatingSummaryResponse;
+import com.stygianMaxxer.model.Difficulty;
 import com.stygianMaxxer.security.AuthPrincipal;
 import com.stygianMaxxer.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +50,23 @@ public class PostController {
             @RequestParam(required = false) Integer accountId,
             @RequestParam(required = false) Short bossId,
             @RequestParam(required = false) Short charId,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) BigDecimal minCost,
+            @RequestParam(required = false) BigDecimal maxCost,
+            @RequestParam(required = false) Integer minTime,
+            @RequestParam(required = false) Integer maxTime,
+            @RequestParam(required = false) List<Short> charInclude,
+            @RequestParam(required = false, defaultValue = "AND") String includeMode,
+            @RequestParam(required = false) List<Short> charExclude,
+            @RequestParam(required = false) Boolean allBossesOnly,
             Pageable pageable
     ) {
-        return postService.getPosts(stygianId, accountId, bossId, charId, pageable);
+        return postService.getPosts(
+                stygianId, accountId, bossId, charId,
+                difficulty, minCost, maxCost, minTime, maxTime,
+                charInclude, includeMode, charExclude, allBossesOnly,
+                pageable
+        );
     }
 
     @PatchMapping("/{postId}")

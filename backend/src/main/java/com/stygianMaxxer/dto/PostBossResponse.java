@@ -1,5 +1,6 @@
 package com.stygianMaxxer.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record PostBossResponse(
@@ -9,6 +10,7 @@ public record PostBossResponse(
         String bossName,
         String buildInfo,
         short clearTime,   // seconds, 0-120
+        BigDecimal cost,   // auto-calculated team cost — see CostCalculator
 
         List<PostBossCharacterResponse> characters
 ) {}

@@ -21,6 +21,7 @@ type Boss = {
   icon: string;
   buildInfo?: string;
   clearTime?: number; // seconds, 0-120
+  cost?: number;      // auto-calculated team cost for this boss
   characters: Character[];
 };
 
@@ -30,7 +31,7 @@ function formatClearTime(seconds: number) {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export default function BossCard({ name, icon, buildInfo, clearTime, characters }: Boss) {
+export default function BossCard({ name, icon, buildInfo, clearTime, cost, characters }: Boss) {
   return (
     <div className="card bg-base-200 shadow-md">
       <div className="card-body gap-4">
@@ -38,11 +39,18 @@ export default function BossCard({ name, icon, buildInfo, clearTime, characters 
         <div className="flex items-center gap-3">
           <img src={icon} alt={name} className="w-12 h-12 rounded-md" />
           <h3 className="text-lg font-semibold">{name}</h3>
-          {typeof clearTime === "number" && (
-            <span className="badge badge-ghost ml-auto">
-              ⏱ {formatClearTime(clearTime)}
-            </span>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {typeof cost === "number" && (
+              <span className="badge badge-warning badge-outline" title="Team cost">
+                💰 {cost}
+              </span>
+            )}
+            {typeof clearTime === "number" && (
+              <span className="badge badge-ghost">
+                ⏱ {formatClearTime(clearTime)}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Build info */}

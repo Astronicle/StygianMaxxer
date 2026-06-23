@@ -135,6 +135,27 @@ export interface PostBossSummary {
   bossSlug: string;   // used to build Supabase icon URL
   bossName: string;
   clearTime: number;  // backend: short, seconds 0-120
+  cost: number;        // auto-calculated team cost for this boss (backend: BigDecimal)
+  characters: PostBossCharacterIcon[];
+}
+
+// Minimal character reference — just enough for an icon + name (no weapon/
+// artifact/refinement detail). Used in PostBossClearSummary below.
+export interface PostBossCharacterIcon {
+  charId: number;    // backend: Short
+  charSlug: string;  // used to build Supabase icon URL
+  charName: string;
+}
+
+// This-boss-only clear summary, present on PostSummary only when the
+// /api/posts request is filtered to a single bossId (the boss detail page).
+// Distinct from PostSummary.totalClearTime/totalCost/bosses, which cover
+// every boss in the post — a post can clear multiple bosses, so this field
+// scopes the numbers down to just the boss being viewed.
+export interface PostBossClearSummary {
+  clearTime: number;  // backend: short, seconds 0-120 — this boss only
+  cost: number;         // character + weapon cost — this boss only (backend: BigDecimal)
+  characters: PostBossCharacterIcon[];
 }
 
 export interface PostSummary {
@@ -147,7 +168,9 @@ export interface PostSummary {
   ratingCount: number;          // NOTE: backend returns Long — JS treats it as number fine
   difficulty: "Fearless" | "Dire";
   totalClearTime: number;       // sum of every boss's clearTime in this post, in seconds
+  totalCost: number;             // sum of every boss's cost in this post (backend: BigDecimal)
   bosses: PostBossSummary[];
+  bossClear: PostBossClearSummary | null;  // only present when filtered by bossId
 }
 
 // Generic Spring Page wrapper
@@ -163,6 +186,45 @@ export async function apiGetPosts(page = 0, size = 12): Promise<Page<PostSummary
   return apiFetch<Page<PostSummary>>(`/api/posts?page=${page}&size=${size}`);
 }
 
+// All advanced filter params — pass as a partial, omitted fields are ignored.
+export interface PostFilterParams {
+  stygianId?: number;
+  accountId?: number;
+  bossId?: number;
+  charId?: number;
+  difficulty?: "Fearless" | "Dire";
+  minCost?: number;
+  maxCost?: number;
+  minTime?: number;
+  maxTime?: number;
+  charInclude?: number[];
+  includeMode?: "AND" | "OR";
+  charExclude?: number[];
+  allBossesOnly?: boolean;
+  page?: number;
+  size?: number;
+}
+
+export async function apiGetPostsFiltered(params: PostFilterParams): Promise<Page<PostSummary>> {
+  const qs = new URLSearchParams();
+  if (params.stygianId  != null) qs.set("stygianId",   String(params.stygianId));
+  if (params.accountId  != null) qs.set("accountId",   String(params.accountId));
+  if (params.bossId     != null) qs.set("bossId",      String(params.bossId));
+  if (params.charId     != null) qs.set("charId",      String(params.charId));
+  if (params.difficulty != null) qs.set("difficulty",  params.difficulty);
+  if (params.minCost    != null) qs.set("minCost",     String(params.minCost));
+  if (params.maxCost    != null) qs.set("maxCost",     String(params.maxCost));
+  if (params.minTime    != null) qs.set("minTime",     String(params.minTime));
+  if (params.maxTime    != null) qs.set("maxTime",     String(params.maxTime));
+  if (params.charInclude?.length) params.charInclude.forEach(id => qs.append("charInclude", String(id)));
+  if (params.includeMode)        qs.set("includeMode", params.includeMode);
+  if (params.charExclude?.length) params.charExclude.forEach(id => qs.append("charExclude", String(id)));
+  if (params.allBossesOnly != null) qs.set("allBossesOnly", String(params.allBossesOnly));
+  qs.set("page", String(params.page ?? 0));
+  qs.set("size", String(params.size ?? 12));
+  return apiFetch<Page<PostSummary>>(`/api/posts?${qs.toString()}`);
+}
+
 // GET /api/posts?accountId=&size=50  — filtered to one user (requires JWT for own posts)
 export async function apiGetMyPosts(accountId: number): Promise<Page<PostSummary>> {
   return apiFetch<Page<PostSummary>>(`/api/posts?accountId=${accountId}&size=50`);
@@ -175,11 +237,16 @@ export interface PostBossCharacter {
   charId: number;       // backend: Short
   charName: string;
   charSlug: string;     // used to build Supabase icon URL
+  charRarity: number;      // backend: short, 1-5
+  charLimited: boolean;    // banner classification — drives team cost
+  characterCost: number;   // this slot's character-only cost contribution (backend: BigDecimal)
   weaponId: number;        // backend: Short
   weaponName: string;
   weaponSlug: string;      // used to build Supabase icon URL
   weaponRarity: number;    // backend: short, 1-5
   weaponTypeSlug: string;  // e.g. "sword" — icon path is <base>/<weaponTypeSlug>/<weaponSlug>.png
+  weaponLimited: boolean;  // banner classification — drives team cost
+  weaponCost: number;      // this slot's weapon-only cost contribution (backend: BigDecimal)
   refinement: number;      // backend: short, 1-5 (R1-R5)
   artifactSetId: number;   // backend: Short
   artifactSetName: string;
@@ -195,6 +262,7 @@ export interface PostBoss {
   bossName: string;
   buildInfo: string | null;
   clearTime: number;    // backend: short, seconds 0-120
+  cost: number;          // auto-calculated team cost for this boss (backend: BigDecimal)
   characters: PostBossCharacter[];
 }
 
@@ -311,6 +379,21 @@ export async function apiGetStygian(id: number): Promise<Stygian> {
   return apiFetch<Stygian>(`/api/stygian/${id}`);
 }
 
+// ─── Characters (lookup) ──────────────────────────────────────────────────────
+export interface Character {
+  id: number;
+  slug: string;
+  name: string;
+  rarity: number;
+  isLimited: boolean;
+  element: { id: number; slug: string; name: string };
+  weaponType: { id: number; slug: string; name: string };
+}
+
+export async function apiGetCharacters(): Promise<Character[]> {
+  return apiFetch<Character[]>("/api/characters");
+}
+
 // ─── Bosses (lookup) ──────────────────────────────────────────────────────────
 // Backend DTO: BossResponse { id: short, slug: String, name: String }
 
@@ -338,7 +421,29 @@ export interface Weapon {
   slug: string;   // used to build Supabase icon URL
   name: string;
   rarity: number; // 1-5
+  isLimited: boolean; // banner classification — drives team cost
   weaponType: { id: number; slug: string; name: string };
+}
+
+// Team cost formula (mirrors backend CostCalculator — see PostServiceImpl).
+// Live client-side calculation for the "Cost (auto)" display; the backend
+// always recomputes and stores the authoritative value on submit, so this
+// is purely a UX convenience and is never trusted as-is.
+//   4★ character (any)        = 0
+//   5★ limited character      = cons + 1
+//   5★ standard character     = (cons + 1) × 0.5
+//   4★ and below weapon (any) = 0
+//   5★ limited weapon         = refinement
+//   5★ standard weapon        = refinement × 0.5
+export function calculateCharacterCost(rarity: number, isLimited: boolean, cons: number): number {
+  if (rarity < 5) return 0;
+  const base = cons + 1;
+  return isLimited ? base : base * 0.5;
+}
+
+export function calculateWeaponCost(rarity: number, isLimited: boolean, refinement: number): number {
+  if (rarity < 5) return 0;
+  return isLimited ? refinement : refinement * 0.5;
 }
 
 // Default refinement convention: 5★ weapons (the rare ones, usually limited)

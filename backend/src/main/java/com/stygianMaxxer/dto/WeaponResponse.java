@@ -5,5 +5,6 @@ public record WeaponResponse(
         String slug,
         String name,
         short rarity,
+        boolean isLimited,
         LookupRef weaponType
 ) {}

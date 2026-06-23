@@ -62,43 +62,62 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             COUNT(r.rating),
             CAST(COALESCE((
                 SELECT SUM(pb2.clearTime) FROM PostBoss pb2 WHERE pb2.post = p
-            ), 0) AS long)
+            ), 0) AS long),
+            COALESCE((
+                SELECT SUM(pb3.cost) FROM PostBoss pb3 WHERE pb3.post = p
+            ), 0)
         )
         FROM Post p
         JOIN p.account a
         JOIN p.stygian s
         LEFT JOIN PostRating r ON r.post.postId = p.postId
         WHERE
-            (:stygianId  IS NULL OR s.id         = :stygianId)
-        AND (:accountId  IS NULL OR a.accountId  = :accountId)
-        AND (:bossId     IS NULL OR EXISTS (
-                SELECT 1 FROM PostBoss pb
-                WHERE pb.post = p AND pb.boss.id = :bossId
+            (:stygianId   IS NULL OR s.id            = :stygianId)
+        AND (:accountId   IS NULL OR a.accountId     = :accountId)
+        AND (:bossId      IS NULL OR EXISTS (
+                SELECT 1 FROM PostBoss pb WHERE pb.post = p AND pb.boss.id = :bossId
             ))
-        AND (:charId     IS NULL OR EXISTS (
-                SELECT 1 FROM PostBoss pb
-                JOIN pb.characters pbc
+        AND (:charId      IS NULL OR EXISTS (
+                SELECT 1 FROM PostBoss pb JOIN pb.characters pbc
                 WHERE pb.post = p AND pbc.character.id = :charId
             ))
+        
+        AND (:minCost     IS NULL OR (
+                SELECT COALESCE(SUM(pb4.cost), 0) FROM PostBoss pb4 WHERE pb4.post = p
+            ) >= :minCost)
+        AND (:maxCost     IS NULL OR (
+                SELECT COALESCE(SUM(pb5.cost), 0) FROM PostBoss pb5 WHERE pb5.post = p
+            ) <= :maxCost)
+        AND (:minTime     IS NULL OR (
+                SELECT COALESCE(SUM(pb6.clearTime), 0) FROM PostBoss pb6 WHERE pb6.post = p
+            ) >= :minTime)
+        AND (:maxTime     IS NULL OR (
+                SELECT COALESCE(SUM(pb7.clearTime), 0) FROM PostBoss pb7 WHERE pb7.post = p
+            ) <= :maxTime)
         GROUP BY p.postId, p.postTitle, a.username, s.name, p.createdAt, p.difficulty
     """)
     Page<PostSummaryResponse> findPostSummaries(
-            @Param("stygianId") Short stygianId,
-            @Param("accountId") Integer accountId,
-            @Param("bossId")    Short bossId,
-            @Param("charId")    Short charId,
+            @Param("stygianId")  Short stygianId,
+            @Param("accountId")  Integer accountId,
+            @Param("bossId")     Short bossId,
+            @Param("charId")     Short charId,
+            @Param("difficulty") com.stygianMaxxer.model.Difficulty difficulty,
+            @Param("minCost")    java.math.BigDecimal minCost,
+            @Param("maxCost")    java.math.BigDecimal maxCost,
+            @Param("minTime")    Integer minTime,
+            @Param("maxTime")    Integer maxTime,
             Pageable pageable
     );
 
     // ── Per-boss summaries for a page of posts (browse cards) ──────────────────
     // Given a list of post ids, fetches (postId, bossId, bossSlug, bossName,
-    // clearTime) for every boss in those posts as plain Object[] rows — kept
-    // as scalars (not a DTO constructor expression) so postId can ride along
-    // for grouping in the service layer. Used to attach the `bosses` list
-    // onto PostSummaryResponse after the main aggregate query above.
+    // clearTime, cost) for every boss in those posts as plain Object[] rows —
+    // kept as scalars (not a DTO constructor expression) so postId can ride
+    // along for grouping in the service layer. Used to attach the `bosses`
+    // list onto PostSummaryResponse after the main aggregate query above.
     // One query regardless of page size — not N+1.
     @Query("""
-        SELECT p.postId, b.id, b.slug, b.name, pb.clearTime
+        SELECT p.postId, b.id, b.slug, b.name, pb.clearTime, pb.cost
         FROM PostBoss pb
         JOIN pb.post p
         JOIN pb.boss b
@@ -106,6 +125,22 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
         ORDER BY p.postId, b.name
     """)
     List<Object[]> findBossSummariesForPosts(@Param("postIds") List<Integer> postIds);
+
+    // ── Character icons for ALL bosses, across a page of posts ─────────────────
+    // Returns (postId, bossId, charId, charSlug, charName) — grouped by
+    // postId and bossId — so the service layer can map characters onto each
+    // PostBossSummary. Used on the stygian/browse pages where bossId is not
+    // filtered. Ordered by slot so character order is consistent.
+    @Query("""
+        SELECT p.postId, pb.boss.id, c.id, c.slug, c.name
+        FROM PostBoss pb
+        JOIN pb.post p
+        JOIN pb.characters pbc
+        JOIN pbc.character c
+        WHERE p.postId IN :postIds
+        ORDER BY p.postId, pb.boss.id, pbc.id.slot
+    """)
+    List<Object[]> findCharacterIconsForAllBossesInPosts(@Param("postIds") List<Integer> postIds);
 
     // ── Bosses killed in a post (lightweight, no character detail) ──────────────
     // Used by post summary cards (e.g. the user profile post list) to show
