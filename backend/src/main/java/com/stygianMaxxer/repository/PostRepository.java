@@ -81,7 +81,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
                 SELECT 1 FROM PostBoss pb JOIN pb.characters pbc
                 WHERE pb.post = p AND pbc.character.id = :charId
             ))
-        
+        AND (:difficulty  IS NULL OR CAST(p.difficulty AS string) = :difficulty)
         AND (:minCost     IS NULL OR (
                 SELECT COALESCE(SUM(pb4.cost), 0) FROM PostBoss pb4 WHERE pb4.post = p
             ) >= :minCost)
@@ -101,7 +101,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("accountId")  Integer accountId,
             @Param("bossId")     Short bossId,
             @Param("charId")     Short charId,
-            @Param("difficulty") com.stygianMaxxer.model.Difficulty difficulty,
+            @Param("difficulty") String difficulty,
             @Param("minCost")    java.math.BigDecimal minCost,
             @Param("maxCost")    java.math.BigDecimal maxCost,
             @Param("minTime")    Integer minTime,

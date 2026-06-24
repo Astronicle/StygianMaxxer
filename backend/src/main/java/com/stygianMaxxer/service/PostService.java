@@ -7,7 +7,6 @@ import com.stygianMaxxer.dto.PostResponse;
 import com.stygianMaxxer.dto.PostSummaryResponse;
 import com.stygianMaxxer.dto.PostUpdateRequest;
 import com.stygianMaxxer.dto.RatingSummaryResponse;
-import com.stygianMaxxer.model.Difficulty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,7 +24,7 @@ public interface PostService {
             Integer accountId,
             Short bossId,
             Short charId,
-            Difficulty difficulty,
+            String difficulty,
             BigDecimal minCost,
             BigDecimal maxCost,
             Integer minTime,

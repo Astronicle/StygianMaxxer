@@ -152,7 +152,7 @@ public class PostServiceImpl implements PostService {
             Integer accountId,
             Short bossId,
             Short charId,
-            Difficulty difficulty,
+            String difficulty,
             java.math.BigDecimal minCost,
             java.math.BigDecimal maxCost,
             Integer minTime,

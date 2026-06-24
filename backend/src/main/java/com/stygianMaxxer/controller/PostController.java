@@ -7,7 +7,6 @@ import com.stygianMaxxer.dto.PostResponse;
 import com.stygianMaxxer.dto.PostSummaryResponse;
 import com.stygianMaxxer.dto.PostUpdateRequest;
 import com.stygianMaxxer.dto.RatingSummaryResponse;
-import com.stygianMaxxer.model.Difficulty;
 import com.stygianMaxxer.security.AuthPrincipal;
 import com.stygianMaxxer.service.PostService;
 import jakarta.validation.Valid;
@@ -50,7 +49,7 @@ public class PostController {
             @RequestParam(required = false) Integer accountId,
             @RequestParam(required = false) Short bossId,
             @RequestParam(required = false) Short charId,
-            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) String difficulty,
             @RequestParam(required = false) BigDecimal minCost,
             @RequestParam(required = false) BigDecimal maxCost,
             @RequestParam(required = false) Integer minTime,
