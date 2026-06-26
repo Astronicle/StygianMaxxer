@@ -54,6 +54,10 @@ public class PostServiceImpl implements PostService {
                 .updatedAt(OffsetDateTime.now())
                 .build();
 
+        // Characters must be unique across the entire post — a character
+        // cannot appear in more than one boss's team in the same clear.
+        java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
+
         request.bosses().forEach(bossReq -> {
 
             Boss boss = bossRepository.findById(bossReq.bossId())
@@ -71,14 +75,14 @@ public class PostServiceImpl implements PostService {
                     .clearTime(bossReq.clearTime())
                     .build();
 
-            java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
             java.math.BigDecimal bossCost = java.math.BigDecimal.ZERO;
 
             for (var charReq : bossReq.characters()) {
 
                 if (!seenCharIds.add(charReq.charId())) {
                     throw new IllegalArgumentException(
-                            "Duplicate character id " + charReq.charId() + " in the same boss team"
+                            "Character id " + charReq.charId() + " is used in more than one boss team — " +
+                            "each character may only appear once across the entire post"
                     );
                 }
 
@@ -220,17 +224,33 @@ public class PostServiceImpl implements PostService {
         boolean allBosses  = Boolean.TRUE.equals(allBossesOnly) && stygianId != null;
 
         if (hasInclude || hasExclude || allBosses) {
-            // All char IDs used per post, across all bosses
+            // When bossId is set (stygian page with a boss filter chip active),
+            // charInclude/charExclude must match chars on THAT BOSS ONLY — not
+            // the whole post. Build both scopes so we can pick the right one.
             java.util.Map<Integer, java.util.Set<Short>> charIdsByPost = new java.util.HashMap<>();
+            java.util.Map<Integer, java.util.Set<Short>> charIdsByPostForBoss = new java.util.HashMap<>();
+
             charsByPostBoss.forEach((key, chars) -> {
-                int colon = key.indexOf(':');
+                int    colon   = key.indexOf(':');
                 Integer postId = Integer.parseInt(key.substring(0, colon));
-                chars.forEach(c -> charIdsByPost
-                        .computeIfAbsent(postId, k -> new java.util.HashSet<>())
-                        .add(c.charId()));
+                Short  mapBId  = Short.parseShort(key.substring(colon + 1));
+
+                chars.forEach(c -> {
+                    // always accumulate full-post set (for allBossesOnly)
+                    charIdsByPost
+                            .computeIfAbsent(postId, k -> new java.util.HashSet<>())
+                            .add(c.charId());
+
+                    // accumulate boss-scoped set only for the filtered boss
+                    if (bossId != null && bossId.equals(mapBId)) {
+                        charIdsByPostForBoss
+                                .computeIfAbsent(postId, k -> new java.util.HashSet<>())
+                                .add(c.charId());
+                    }
+                });
             });
 
-            // Boss IDs present in each post
+            // Boss IDs present in each post (for allBossesOnly)
             java.util.Map<Integer, java.util.Set<Short>> bossIdsByPost = new java.util.HashMap<>();
             bossesByPostId.forEach((postId, bosses) -> {
                 java.util.Set<Short> ids = new java.util.HashSet<>();
@@ -246,20 +266,25 @@ public class PostServiceImpl implements PostService {
 
             java.util.List<PostSummaryResponse> filtered = new java.util.ArrayList<>();
             for (PostSummaryResponse summary : page.getContent()) {
-                Integer postId    = summary.postId();
-                java.util.Set<Short> postChars  = charIdsByPost.getOrDefault(postId, java.util.Set.of());
+                Integer postId     = summary.postId();
                 java.util.Set<Short> postBosses = bossIdsByPost.getOrDefault(postId, java.util.Set.of());
+
+                // When bossId is active, char filters apply only to that boss's team.
+                // Without a bossId, they apply to the whole post (all bosses).
+                java.util.Set<Short> scopedChars = bossId != null
+                        ? charIdsByPostForBoss.getOrDefault(postId, java.util.Set.of())
+                        : charIdsByPost.getOrDefault(postId, java.util.Set.of());
 
                 if (hasInclude) {
                     java.util.Set<Short> needed = new java.util.HashSet<>(charInclude);
                     boolean passes = "OR".equalsIgnoreCase(includeMode)
-                            ? needed.stream().anyMatch(postChars::contains)
-                            : postChars.containsAll(needed);
+                            ? needed.stream().anyMatch(scopedChars::contains)
+                            : scopedChars.containsAll(needed);
                     if (!passes) continue;
                 }
 
                 if (hasExclude) {
-                    if (charExclude.stream().anyMatch(postChars::contains)) continue;
+                    if (charExclude.stream().anyMatch(scopedChars::contains)) continue;
                 }
 
                 if (allBosses && !postBosses.containsAll(stygianBossIds)) {
@@ -342,6 +367,10 @@ public class PostServiceImpl implements PostService {
             post.getBosses().clear();
             entityManager.flush(); // ensure orphan-removal DELETEs run before new PostBoss INSERTs
 
+            // Characters must be unique across the entire post — a character
+            // cannot appear in more than one boss's team in the same clear.
+            java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
+
             request.bosses().forEach(bossReq -> {
 
                 Boss boss = bossRepository.findById(bossReq.bossId())
@@ -359,14 +388,14 @@ public class PostServiceImpl implements PostService {
                         .clearTime(bossReq.clearTime())
                         .build();
 
-                java.util.Set<Short> seenCharIds = new java.util.HashSet<>();
                 java.math.BigDecimal bossCost = java.math.BigDecimal.ZERO;
 
                 for (var charReq : bossReq.characters()) {
 
                     if (!seenCharIds.add(charReq.charId())) {
                         throw new IllegalArgumentException(
-                                "Duplicate character id " + charReq.charId() + " in the same boss team"
+                                "Character id " + charReq.charId() + " is used in more than one boss team — " +
+                                "each character may only appear once across the entire post"
                         );
                     }
 

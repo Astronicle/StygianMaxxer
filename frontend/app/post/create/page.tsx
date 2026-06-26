@@ -186,11 +186,14 @@ export default function PostCreatePage() {
     // 5★ weapons default to R1, everything else defaults to R5 — user can change it.
     const defaultRefinement = defaultWeapon ? defaultRefinementForRarity(defaultWeapon.rarity) : 5;
 
-    setBossEntries((prev) =>
-      prev.map((b) => {
+    setBossEntries((prev) => {
+      // Block if character is already used in ANY boss across the post
+      const usedGlobally = new Set(prev.flatMap((b) => b.characters.map((c) => c.charId)));
+      if (usedGlobally.has(char.id)) return prev;
+
+      return prev.map((b) => {
         if (b.bossId !== bossId) return b;
         if (b.characters.length >= 4) return b;
-        if (b.characters.some((c) => c.charId === char.id)) return b;
         const nextSlot = b.characters.length + 1; // slot is 1-indexed
         return {
           ...b,
@@ -207,8 +210,8 @@ export default function PostCreatePage() {
             },
           ],
         };
-      })
-    );
+      });
+    });
   }
 
   function removeCharacterFromBoss(bossId: number, charId: number) {
@@ -344,6 +347,12 @@ export default function PostCreatePage() {
 
   const selectedStygian = stygians.find((s) => s.id === selectedStygianId);
   const activeBosses = bossEntries.filter((b) => activeBossIds.has(b.bossId));
+
+  // Set of all char IDs used across ALL bosses — passed to BossSection
+  // so it can disable chars already claimed by another boss.
+  const allUsedCharIds = new Set(
+    bossEntries.flatMap((b) => b.characters.map((c) => c.charId))
+  );
 
   // Validation: at least 1 boss selected, and every active boss has ≥1 character + buildInfo
   // + a valid clear time, and every character has a weapon + artifact set selected (both compulsory)
@@ -482,6 +491,7 @@ export default function PostCreatePage() {
                       allCharacters={characters}
                       allWeapons={weapons}
                       allArtifactSets={artifactSets}
+                      usedCharIds={allUsedCharIds}
                       onBuildInfoChange={(v) => setBuildInfo(boss.bossId, v)}
                       onClearTimeChange={(v) => setClearTime(boss.bossId, v)}
                       onAddCharacter={(c) => addCharacterToBoss(boss.bossId, c)}
@@ -527,6 +537,7 @@ type BossSectionProps = {
   allCharacters: CharacterOption[];
   allWeapons: WeaponOption[];
   allArtifactSets: ArtifactSetOption[];
+  usedCharIds: Set<number>;  // char IDs already used in ANY boss in this post
   onBuildInfoChange: (v: string) => void;
   onClearTimeChange: (v: number) => void;
   onAddCharacter: (c: CharacterOption) => void;
@@ -544,6 +555,7 @@ function BossSection({
   allCharacters,
   allWeapons,
   allArtifactSets,
+  usedCharIds,
   onBuildInfoChange,
   onClearTimeChange,
   onAddCharacter,
@@ -556,7 +568,9 @@ function BossSection({
   const WEAPON_ICON_BASE = process.env.NEXT_PUBLIC_WEAPON_ICON_BASE_URL ?? "";
   const ARTIFACT_ICON_BASE = process.env.NEXT_PUBLIC_ARTIFACT_ICON_BASE_URL ?? "";
 
-  const selectedCharIds = new Set(boss.characters.map((c) => c.charId));
+  // usedCharIds already includes this boss's chars — any char in here is
+  // either already on this boss (can't re-add) or on another boss (blocked).
+  const selectedCharIds = usedCharIds;
 
   // Live cost calculation — mirrors the backend CostCalculator exactly.
   // Each entry contributes characterCost + weaponCost; the boss total is
@@ -699,11 +713,17 @@ function BossSection({
             disabled={boss.characters.length >= 4}
           >
             <option disabled value="">Add character…</option>
-            {allCharacters.map((c) => (
-              <option key={c.id} value={c.id} disabled={selectedCharIds.has(c.id)}>
-                {c.name} ({c.element.name} · {c.weaponType.name})
-              </option>
-            ))}
+            {allCharacters.map((c) => {
+              const thisBosskChars = new Set(boss.characters.map((ch) => ch.charId));
+              const usedElsewhere = selectedCharIds.has(c.id) && !thisBosskChars.has(c.id);
+              const alreadyHere   = thisBosskChars.has(c.id);
+              return (
+                <option key={c.id} value={c.id} disabled={alreadyHere || usedElsewhere}>
+                  {usedElsewhere ? `[Used] ${c.name}` : alreadyHere ? `[Added] ${c.name}` : c.name}
+                  {!usedElsewhere && !alreadyHere ? ` (${c.element.name} · ${c.weaponType.name})` : ""}
+                </option>
+              );
+            })}
           </select>
         </div>
 

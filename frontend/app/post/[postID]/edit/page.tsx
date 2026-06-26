@@ -181,11 +181,14 @@ export default function PostEditPage() {
     // 5★ weapons default to R1, everything else defaults to R5 — user can change it.
     const defaultRefinement = defaultWeapon ? defaultRefinementForRarity(defaultWeapon.rarity) : 5;
 
-    setBossEntries((prev) =>
-      prev.map((b) => {
+    setBossEntries((prev) => {
+      // Block if character is already used in ANY boss across the post
+      const usedGlobally = new Set(prev.flatMap((b) => b.characters.map((c) => c.charId)));
+      if (usedGlobally.has(char.id)) return prev;
+
+      return prev.map((b) => {
         if (b.bossId !== bossId) return b;
         if (b.characters.length >= 4) return b;
-        if (b.characters.some((c) => c.charId === char.id)) return b;
         const nextSlot = b.characters.length + 1;
         return {
           ...b,
@@ -204,8 +207,8 @@ export default function PostEditPage() {
             },
           ],
         };
-      })
-    );
+      });
+    });
   }
 
   function removeCharacterFromBoss(bossId: number, charId: number) {
@@ -318,6 +321,10 @@ export default function PostEditPage() {
   const canSubmit =
     title.trim() && description.trim() && videoLink.trim() && bossesValid;
 
+  // Set of all char IDs used across ALL bosses — passed into each boss's
+  // character picker so chars claimed by another boss show as disabled.
+  const allUsedCharIds = new Set(bossEntries.flatMap((b) => b.characters.map((c) => c.charId)));
+
   // ─── Render ────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -405,8 +412,9 @@ export default function PostEditPage() {
             </p>
           </div>
 
+          {/* All char IDs used across every boss — blocks cross-boss reuse in the picker */}
           {bossEntries.map((boss) => {
-            const selectedCharIds = new Set(boss.characters.map((c) => c.charId));
+            const thisBossCharIds = new Set(boss.characters.map((c) => c.charId));
 
             // Live cost calculation — mirrors the backend CostCalculator exactly.
             const costBreakdown = boss.characters.map((entry) => {
@@ -544,11 +552,16 @@ export default function PostEditPage() {
                       disabled={boss.characters.length >= 4}
                     >
                       <option disabled value="">Add character…</option>
-                      {characters.map((c) => (
-                        <option key={c.id} value={c.id} disabled={selectedCharIds.has(c.id)}>
-                          {c.name} ({c.element.name} · {c.weaponType.name})
-                        </option>
-                      ))}
+                      {characters.map((c) => {
+                        const usedElsewhere = allUsedCharIds.has(c.id) && !thisBossCharIds.has(c.id);
+                        const alreadyHere   = thisBossCharIds.has(c.id);
+                        return (
+                          <option key={c.id} value={c.id} disabled={alreadyHere || usedElsewhere}>
+                            {usedElsewhere ? `[Used] ${c.name}` : alreadyHere ? `[Added] ${c.name}` : c.name}
+                            {!usedElsewhere && !alreadyHere ? ` (${c.element.name} · ${c.weaponType.name})` : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
