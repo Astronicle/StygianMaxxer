@@ -65,10 +65,9 @@ export default function PostBrowsePage() {
         <div className="alert alert-info">No posts yet — be the first!</div>
       ) : (
         <>
-          {/* Horizontal scroll row — same layout as before */}
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (
-              <Link key={post.postId} href={`/post/${post.postId}`}>
+              <Link key={post.postId} href={`/post/${post.postId}`} className="h-full">
                 <PostBrowseCard {...post} />
               </Link>
             ))}

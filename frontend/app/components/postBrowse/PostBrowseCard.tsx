@@ -43,7 +43,7 @@ export default function PostBrowseCard({
   bosses,
 }: PostBrowseCardProps) {
   return (
-    <div className="card bg-base-200 shadow-md min-w-72 shrink-0 hover:shadow-lg transition-shadow">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow h-full">
       <div className="card-body gap-3">
         <h3 className="card-title text-lg line-clamp-1">{title}</h3>
 
