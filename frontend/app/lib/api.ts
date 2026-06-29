@@ -193,6 +193,7 @@ export interface PostFilterParams {
   bossId?: number;
   charId?: number;
   difficulty?: "Fearless" | "Dire";
+  titleSearch?: string;
   minCost?: number;
   maxCost?: number;
   minTime?: number;
@@ -212,6 +213,7 @@ export async function apiGetPostsFiltered(params: PostFilterParams): Promise<Pag
   if (params.bossId     != null) qs.set("bossId",      String(params.bossId));
   if (params.charId     != null) qs.set("charId",      String(params.charId));
   if (params.difficulty != null) qs.set("difficulty",  params.difficulty);
+  if (params.titleSearch != null && params.titleSearch.trim() !== "") qs.set("titleSearch", params.titleSearch.trim());
   if (params.minCost    != null) qs.set("minCost",     String(params.minCost));
   if (params.maxCost    != null) qs.set("maxCost",     String(params.maxCost));
   if (params.minTime    != null) qs.set("minTime",     String(params.minTime));

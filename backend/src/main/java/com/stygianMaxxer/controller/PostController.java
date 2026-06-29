@@ -50,6 +50,7 @@ public class PostController {
             @RequestParam(required = false) Short bossId,
             @RequestParam(required = false) Short charId,
             @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) String titleSearch,
             @RequestParam(required = false) BigDecimal minCost,
             @RequestParam(required = false) BigDecimal maxCost,
             @RequestParam(required = false) Integer minTime,
@@ -62,7 +63,7 @@ public class PostController {
     ) {
         return postService.getPosts(
                 stygianId, accountId, bossId, charId,
-                difficulty, minCost, maxCost, minTime, maxTime,
+                difficulty, titleSearch, minCost, maxCost, minTime, maxTime,
                 charInclude, includeMode, charExclude, allBossesOnly,
                 pageable
         );

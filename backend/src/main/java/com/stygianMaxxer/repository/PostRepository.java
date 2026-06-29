@@ -82,6 +82,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
                 WHERE pb.post = p AND pbc.character.id = :charId
             ))
         AND (:difficulty  IS NULL OR CAST(p.difficulty AS string) = :difficulty)
+        AND (:titleSearch IS NULL OR LOWER(CAST(p.postTitle AS string)) LIKE LOWER(CONCAT('%', CAST(:titleSearch AS string), '%')))
         AND (:minCost     IS NULL OR (
                 SELECT COALESCE(SUM(pb4.cost), 0) FROM PostBoss pb4 WHERE pb4.post = p
             ) >= :minCost)
@@ -102,6 +103,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("bossId")     Short bossId,
             @Param("charId")     Short charId,
             @Param("difficulty") String difficulty,
+            @Param("titleSearch") String titleSearch,
             @Param("minCost")    java.math.BigDecimal minCost,
             @Param("maxCost")    java.math.BigDecimal maxCost,
             @Param("minTime")    Integer minTime,

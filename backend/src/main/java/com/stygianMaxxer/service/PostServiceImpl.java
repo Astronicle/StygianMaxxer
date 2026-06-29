@@ -157,6 +157,7 @@ public class PostServiceImpl implements PostService {
             Short bossId,
             Short charId,
             String difficulty,
+            String titleSearch,
             java.math.BigDecimal minCost,
             java.math.BigDecimal maxCost,
             Integer minTime,
@@ -169,7 +170,7 @@ public class PostServiceImpl implements PostService {
     ) {
         Page<PostSummaryResponse> page = postRepository.findPostSummaries(
                 stygianId, accountId, bossId, charId,
-                difficulty, minCost, maxCost, minTime, maxTime,
+                difficulty, titleSearch, minCost, maxCost, minTime, maxTime,
                 pageable
         );
 

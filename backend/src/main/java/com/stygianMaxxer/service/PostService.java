@@ -25,6 +25,7 @@ public interface PostService {
             Short bossId,
             Short charId,
             String difficulty,
+            String titleSearch,
             BigDecimal minCost,
             BigDecimal maxCost,
             Integer minTime,
