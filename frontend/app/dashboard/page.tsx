@@ -5,24 +5,16 @@ import { useRouter } from "next/navigation";
 import {
   apiGetMyProfile,
   apiGetMyPosts,
+  apiUpdateMyProfile,
   getToken,
   clearToken,
   type AccountProfile,
   type PostSummary,
 } from "../lib/api";
+import { avatarIconUrl } from "../lib/avatar";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import DashboardPostCard from "../components/dashboard/DashboardPostCard";
-
-// Supabase character icon base URL — e.g. .../assets/character
-// Icon path pattern: <CHAR_ICON_BASE>/<charSlug>/icon.webp
-const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
-
-function buildCharIconUrl(charName: string | null): string {
-  if (!charName || !CHAR_ICON_BASE) return "/icon.png";
-  // avatarCharName from the backend is the character name (e.g. "Rover")
-  // Supabase stores icons at: <base>/<charName>/icon.webp
-  return `${CHAR_ICON_BASE}/${charName}/icon.webp`;
-}
+import AvatarPickerModal from "../components/dashboard/AvatarPickerModal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,6 +23,7 @@ export default function DashboardPage() {
   const [posts, setPosts] = useState<PostSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
 
   useEffect(() => {
     // No token → redirect to login immediately
@@ -42,7 +35,7 @@ export default function DashboardPage() {
     async function load() {
       try {
         // 1) Fetch the logged-in user's profile (JWT required)
-        //    Response: { accountId, username, email, avatarCharId, avatarCharName, creationDate }
+        //    Response: { accountId, username, email, avatarCharId, avatarCharName, avatarCharSlug, creationDate }
         const me = await apiGetMyProfile();
         setProfile(me);
 
@@ -66,6 +59,13 @@ export default function DashboardPage() {
     load();
   }, [router]);
 
+  // Persist the chosen avatar to the backend, then update local state so the
+  // header reflects the change immediately without a refetch.
+  async function handleAvatarSelect(charId: number) {
+    const updated = await apiUpdateMyProfile({ avatarCharId: charId });
+    setProfile(updated);
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[40vh]">
@@ -86,9 +86,17 @@ export default function DashboardPage() {
     <div className="max-w-6xl mx-auto p-6 space-y-10">
       <DashboardHeader
         username={profile!.username}
-        // Build avatar URL from avatarCharName (the slug the backend returns).
-        // Falls back to the app icon if no avatar is set.
-        charIcon={buildCharIconUrl(profile!.avatarCharName)}
+        // Build avatar URL from the character's slug — falls back to the
+        // default Traveler avatar if the account has none set.
+        charIcon={avatarIconUrl(profile!.avatarCharSlug)}
+        onAvatarClick={() => setAvatarPickerOpen(true)}
+      />
+
+      <AvatarPickerModal
+        open={avatarPickerOpen}
+        currentCharId={profile!.avatarCharId}
+        onClose={() => setAvatarPickerOpen(false)}
+        onSelect={handleAvatarSelect}
       />
 
       <section className="space-y-4">
@@ -97,7 +105,7 @@ export default function DashboardPage() {
         </div>
 
         {posts.length === 0 ? (
-          <div className="alert alert-info">You haven't created any posts yet.</div>
+          <div className="alert alert-info">You haven&apos;t created any posts yet.</div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (

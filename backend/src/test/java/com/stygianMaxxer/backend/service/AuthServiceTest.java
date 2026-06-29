@@ -4,7 +4,9 @@ import com.stygianMaxxer.dto.AuthResponse;
 import com.stygianMaxxer.dto.LoginRequest;
 import com.stygianMaxxer.dto.RegisterRequest;
 import com.stygianMaxxer.model.Account;
+import com.stygianMaxxer.model.Character;
 import com.stygianMaxxer.repository.AccountRepository;
+import com.stygianMaxxer.repository.CharacterRepository;
 import com.stygianMaxxer.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -21,9 +25,11 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AuthServiceTest {
 
     @Mock AccountRepository accountRepository;
+    @Mock CharacterRepository characterRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtService jwtService;
 
@@ -41,6 +47,11 @@ class AuthServiceTest {
                 .email("test@example.com")
                 .passwordHash("hashed")
                 .build();
+
+        // Default-avatar lookup runs on every register() call — stub it here
+        // so individual tests don't need to repeat it. Lenient since not
+        // every test path reaches register().
+        when(characterRepository.findBySlug("traveler-anemo")).thenReturn(Optional.empty());
     }
 
     // ── register ──────────────────────────────────────────────────────────────

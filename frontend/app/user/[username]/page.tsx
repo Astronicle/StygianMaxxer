@@ -8,16 +8,9 @@ import {
   type AccountProfile,
   type PostSummary,
 } from "@/app/lib/api";
+import { avatarIconUrl } from "@/app/lib/avatar";
 import UserHeader from "@/app/components/user/UserHeader";
 import PostCard from "@/app/components/user/PostCard";
-
-// Avatar icons live at: <CHAR_ICON_BASE>/<charName>/icon.webp
-const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
-
-function buildCharIconUrl(charName: string | null): string {
-  if (!charName || !CHAR_ICON_BASE) return "/icon.png";
-  return `${CHAR_ICON_BASE}/${charName}/icon.webp`;
-}
 
 export default function UserProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -68,7 +61,7 @@ export default function UserProfilePage() {
     <div className="max-w-5xl mx-auto p-6 space-y-10">
       <UserHeader
         username={profile.username}
-        charIcon={buildCharIconUrl(profile.avatarCharName)}
+        charIcon={avatarIconUrl(profile.avatarCharSlug)}
       />
 
       <section className="space-y-4">

@@ -88,19 +88,34 @@ export async function apiRegister(
 }
 
 // ─── Account ──────────────────────────────────────────────────────────────────
-// Backend DTO: AccountProfileResponse { accountId, username, email, avatarCharId, avatarCharName, creationDate }
+// Backend DTO: AccountProfileResponse { accountId, username, email, avatarCharId, avatarCharName, avatarCharSlug, creationDate }
 export interface AccountProfile {
   accountId: number;
   username: string;
   email: string | null;         // null on public profiles
   avatarCharId: number | null;  // null if no avatar set
   avatarCharName: string | null; // null if no avatar set
+  avatarCharSlug: string | null; // null if no avatar set — use this (not the name) to build icon URLs
   creationDate: string;         // ISO OffsetDateTime string
 }
 
 // GET /api/accounts/me  (requires JWT)
 export async function apiGetMyProfile(): Promise<AccountProfile> {
   return apiFetch<AccountProfile>("/api/accounts/me");
+}
+
+// PATCH /api/accounts/me  (requires JWT)
+// Send only the fields you want to change — null/omitted fields are left as-is.
+// avatarCharId: null clears the avatar.
+export async function apiUpdateMyProfile(updates: {
+  username?: string;
+  email?: string;
+  avatarCharId?: number | null;
+}): Promise<AccountProfile> {
+  return apiFetch<AccountProfile>("/api/accounts/me", {
+    method: "PATCH",
+    body: updates,
+  });
 }
 
 // GET /api/accounts/{accountId}  (public)
@@ -113,13 +128,14 @@ export async function apiGetProfileByUsername(username: string): Promise<Account
   return apiFetch<AccountProfile>(`/api/accounts/by-username/${encodeURIComponent(username)}`);
 }
 
-// Backend DTO: AccountSummaryResponse { accountId, username, avatarCharId, avatarCharName }
+// Backend DTO: AccountSummaryResponse { accountId, username, avatarCharId, avatarCharName, avatarCharSlug }
 // Lightweight shape used for the user browse list.
 export interface AccountSummary {
   accountId: number;
   username: string;
   avatarCharId: number | null;
   avatarCharName: string | null;
+  avatarCharSlug: string | null;
 }
 
 // GET /api/accounts?page=&size=  (public)

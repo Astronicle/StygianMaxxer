@@ -113,6 +113,7 @@ public class AccountServiceImpl implements AccountService {
                 includeEmail ? account.getEmail() : null,
                 avatar != null ? avatar.getId() : null,     // Short
                 avatar != null ? avatar.getName() : null,   // confirmed: field is `name`
+                avatar != null ? avatar.getSlug() : null,
                 account.getCreationDate()
         );
     }
@@ -123,7 +124,8 @@ public class AccountServiceImpl implements AccountService {
                 account.getAccountId(),
                 account.getUsername(),
                 avatar != null ? avatar.getId() : null,
-                avatar != null ? avatar.getName() : null
+                avatar != null ? avatar.getName() : null,
+                avatar != null ? avatar.getSlug() : null
         );
     }
 }
