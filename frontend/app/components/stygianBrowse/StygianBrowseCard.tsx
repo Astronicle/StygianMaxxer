@@ -13,7 +13,7 @@ export default function StygianBrowseCard({ stygian }: StygianBrowseCardProps) {
   const sortedBosses = [...stygian.bosses].sort((a, b) => a.slot - b.slot);
 
   return (
-    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
       <div className="card-body gap-4">
         {/* Header — name is something like "Stygian Onslaught", version is "6.2" */}
         <h3 className="card-title text-xl">

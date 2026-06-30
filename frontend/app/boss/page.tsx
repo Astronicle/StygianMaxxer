@@ -49,7 +49,7 @@ export default function BossBrowsePage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {bosses.map((boss) => (
             // Link uses boss.id (numeric) as the route param
-            <Link key={boss.id} href={`/boss/${boss.id}`}>
+            <Link key={boss.id} href={`/boss/${boss.id}`} className="h-full">
               <BossBrowseCard boss={boss} />
             </Link>
           ))}

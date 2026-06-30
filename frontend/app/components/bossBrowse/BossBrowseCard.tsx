@@ -11,8 +11,8 @@ type BossBrowseCardProps = {
 
 export default function BossBrowseCard({ boss }: BossBrowseCardProps) {
   return (
-    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-      <div className="card-body items-center text-center gap-3">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
+      <div className="card-body items-center justify-center text-center gap-3">
         <img
           src={`${BOSS_ICON_BASE}/${boss.slug}/model.webp`}
           alt={boss.name}

@@ -49,7 +49,7 @@ export default function StygianBrowsePage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {stygians.map((stygian) => (
             // Link uses the numeric stygian.id, which the detail page reads as a path param
-            <Link key={stygian.id} href={`/stygian/${stygian.id}`}>
+            <Link key={stygian.id} href={`/stygian/${stygian.id}`} className="h-full">
               <StygianBrowseCard stygian={stygian} />
             </Link>
           ))}

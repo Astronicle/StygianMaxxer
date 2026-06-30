@@ -238,7 +238,7 @@ export default function BossDetailPage() {
           <>
             <div className="grid sm:grid-cols-2 gap-6">
               {posts.map((post) => (
-                <Link key={post.postId} href={`/post/${post.postId}`}>
+                <Link key={post.postId} href={`/post/${post.postId}`} className="h-full">
                   <BossPostCard post={post} highlightBossId={bossId} />
                 </Link>
               ))}

@@ -20,7 +20,7 @@ export default function BossPostCard({ post, highlightBossId }: BossPostCardProp
   });
 
   return (
-    <div className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+    <div className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full">
       <div className="card-body gap-2 p-4">
         <h3 className="card-title text-base line-clamp-1">{post.title}</h3>
 

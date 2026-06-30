@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   apiGetProfileByUsername,
   apiGetMyPosts,
@@ -72,9 +73,11 @@ export default function UserProfilePage() {
             This user hasn&apos;t posted anything yet.
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (
-              <PostCard key={post.postId} post={post} />
+              <Link key={post.postId} href={`/post/${post.postId}`} className="h-full">
+                <PostCard post={post} />
+              </Link>
             ))}
           </div>
         )}

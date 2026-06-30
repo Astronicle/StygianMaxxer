@@ -22,7 +22,7 @@ export default function StygianPostCard({ post, highlightBossId }: StygianPostCa
   });
 
   return (
-    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
       <div className="card-body gap-3 p-4">
         <h3 className="card-title text-base line-clamp-1">{post.title}</h3>
 

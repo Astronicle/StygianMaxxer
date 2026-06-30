@@ -68,7 +68,7 @@ export default function UserBrowsePage() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {users.map((user) => (
-              <Link key={user.accountId} href={`/user/${user.username}`}>
+              <Link key={user.accountId} href={`/user/${user.username}`} className="h-full">
                 <UserBrowseCard user={user} />
               </Link>
             ))}

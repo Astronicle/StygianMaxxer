@@ -30,9 +30,9 @@ export default function PostCard({ post }: PostCardProps) {
   }, [post.postId]);
 
   return (
-    <div className="card bg-base-200 shadow-md min-w-70 shrink-0">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
       <div className="card-body p-4">
-        <h3 className="card-title text-lg">{post.title}</h3>
+        <h3 className="card-title text-lg line-clamp-1">{post.title}</h3>
 
         <p className="text-sm opacity-70">Stygian: {post.stygianName}</p>
 

@@ -7,7 +7,7 @@ type UserBrowseCardProps = {
 
 export default function UserBrowseCard({ user }: UserBrowseCardProps) {
   return (
-    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
       <div className="card-body items-center text-center gap-3">
         <div className="avatar">
           <div className="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
