@@ -20,6 +20,23 @@ export function clearToken(): void {
   window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
+// Decodes the JWT payload client-side to read the logged-in account's id
+// (the token's `sub` claim). This is for UI convenience only — e.g. hiding
+// the "rate this post" widget on your own posts — never for access control;
+// the backend independently enforces every permission check.
+export function getCurrentAccountId(): number | null {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(json) as { sub?: string };
+    return claims.sub ? Number(claims.sub) : null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 // Automatically attaches the JWT Bearer token if one exists in localStorage.
 // Throws an Error with the backend's message on non-2xx responses.
@@ -353,13 +370,21 @@ export async function apiGetPostRatingSummary(postId: number): Promise<RatingSum
   return apiFetch<RatingSummary>(`/api/posts/${postId}/rating-summary`);
 }
 
-// POST /api/posts/{postId}/rate  (requires JWT)
-// score must be 1–5 per backend validation
-export async function apiRatePost(postId: number, score: number): Promise<void> {
+// POST /api/posts/{postId}/rate  (requires JWT; 409 if rating your own post)
+// rating must be 1–5 per backend validation. Acts as an upsert — calling it
+// again with a new value just updates your existing rating.
+export async function apiRatePost(postId: number, rating: number): Promise<void> {
   return apiFetch<void>(`/api/posts/${postId}/rate`, {
     method: "POST",
-    body: { score },
+    body: { rating },
   });
+}
+
+// GET /api/posts/{postId}/my-rating  (requires JWT)
+// Returns the logged-in user's existing rating for this post (1-5), or null
+// if they haven't rated it yet.
+export async function apiGetMyRating(postId: number): Promise<number | null> {
+  return apiFetch<number | null>(`/api/posts/${postId}/my-rating`);
 }
 
 // GET /api/posts/{postId}/bosses  (public)

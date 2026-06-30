@@ -1,5 +1,3 @@
-import RatingStars from "./RatingStars";
-
 type PostHeaderProps = {
   title: string;
   description: string;
@@ -8,7 +6,6 @@ type PostHeaderProps = {
   author: {
     username: string;
   };
-  rating: number;
 };
 
 export default function PostHeader({
@@ -17,7 +14,6 @@ export default function PostHeader({
   createdAt,
   difficulty,
   author,
-  rating,
 }: PostHeaderProps) {
   return (
     <div className="space-y-2">
@@ -30,16 +26,13 @@ export default function PostHeader({
         <span>{new Date(createdAt).toDateString()}</span>
       </div>
 
-      <div className="flex items-center gap-3">
-        <span
-          className={`badge badge-sm font-semibold ${
-            difficulty === "Dire" ? "badge-error" : "badge-warning"
-          }`}
-        >
-          {difficulty}
-        </span>
-        <RatingStars rating={rating} />
-      </div>
+      <span
+        className={`badge badge-sm font-semibold ${
+          difficulty === "Dire" ? "badge-error" : "badge-warning"
+        }`}
+      >
+        {difficulty}
+      </span>
     </div>
   );
 }

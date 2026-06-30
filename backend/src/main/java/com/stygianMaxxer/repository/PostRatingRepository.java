@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface PostRatingRepository extends JpaRepository<PostRating, PostRatingId> {
 
     @Query("""
@@ -18,4 +20,11 @@ public interface PostRatingRepository extends JpaRepository<PostRating, PostRati
            where pr.post.postId = :postId
            """)
     RatingSummaryResponse getSummaryByPostId(@Param("postId") Integer postId);
+
+    @Query("""
+           select pr.rating
+           from PostRating pr
+           where pr.post.postId = :postId and pr.account.accountId = :accountId
+           """)
+    Optional<Short> findRatingValue(@Param("postId") Integer postId, @Param("accountId") Integer accountId);
 }

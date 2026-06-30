@@ -45,6 +45,9 @@ public interface PostService {
 
     RatingSummaryResponse getRatingSummary(Integer postId);
 
+    // Null if this account hasn't rated the post.
+    Short getMyRating(Integer postId, Integer accountId);
+
     // Bosses killed in a post — lightweight (id, slug, name) for icon display
     List<BossResponse> getPostBosses(Integer postId);
 }

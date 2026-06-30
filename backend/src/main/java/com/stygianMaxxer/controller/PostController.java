@@ -103,6 +103,19 @@ public class PostController {
     }
 
     /**
+     * GET /api/posts/{postId}/my-rating  (requires JWT)
+     * The logged-in user's own rating for this post, or null if they
+     * haven't rated it. Used to pre-fill the rating widget on load.
+     */
+    @GetMapping("/{postId}/my-rating")
+    public Short getMyRating(
+            @PathVariable Integer postId,
+            @AuthenticationPrincipal AuthPrincipal principal
+    ) {
+        return postService.getMyRating(postId, principal.accountId());
+    }
+
+    /**
      * GET /api/posts/{postId}/bosses
      * Lightweight list of bosses killed in this post (id, slug, name) — used
      * to render boss icons on post summary cards. Public.

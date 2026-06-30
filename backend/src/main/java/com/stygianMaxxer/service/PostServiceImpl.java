@@ -457,12 +457,17 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public void ratePost(Integer postId, Integer accountId, PostRateRequest request) {
 
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
+
+        if (post.getAccount().getAccountId().equals(accountId)) {
+            throw new IllegalStateException("You cannot rate your own post");
+        }
+
         PostRatingId id = new PostRatingId(postId, accountId);
         PostRating postRating = postRatingRepository.findById(id).orElse(null);
 
         if (postRating == null) {
-            Post post = postRepository.findById(postId)
-                    .orElseThrow(() -> new NoSuchElementException("Post not found: " + postId));
             Account account = accountRepository.findById(accountId)
                     .orElseThrow(() -> new NoSuchElementException("Account not found: " + accountId));
 
@@ -485,6 +490,12 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public RatingSummaryResponse getRatingSummary(Integer postId) {
         return postRatingRepository.getSummaryByPostId(postId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Short getMyRating(Integer postId, Integer accountId) {
+        return postRatingRepository.findRatingValue(postId, accountId).orElse(null);
     }
 
     // ── Bosses killed in a post ──────────────────────────────────────────────

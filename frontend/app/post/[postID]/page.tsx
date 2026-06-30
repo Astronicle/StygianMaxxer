@@ -9,6 +9,7 @@ import {
   type RatingSummary,
 } from "@/app/lib/api";
 import PostHeader from "@/app/components/post/PostHeader";
+import PostRatingPanel from "@/app/components/post/PostRatingPanel";
 import VideoEmbed from "@/app/components/post/VideoEmbed";
 import BossCard from "@/app/components/post/BossCard";
 
@@ -83,7 +84,6 @@ export default function PostPage() {
     createdAt: post.createdAt,
     difficulty: post.difficulty,
     author: { username: post.account.username },
-    rating: rating?.average ?? 0,
   };
 
   const bosses = post.bosses.map((b) => ({
@@ -116,6 +116,14 @@ export default function PostPage() {
       <div className="badge badge-outline">
         {post.stygian.stygianName} {post.stygian.version}
       </div>
+
+      {rating && (
+        <PostRatingPanel
+          postId={postId}
+          postOwnerId={post.account.accountId}
+          initialSummary={rating}
+        />
+      )}
 
       {post.videoLink && <VideoEmbed url={post.videoLink} />}
 

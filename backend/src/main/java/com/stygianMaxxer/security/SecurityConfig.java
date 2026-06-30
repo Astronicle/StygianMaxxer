@@ -53,6 +53,9 @@ public class SecurityConfig {
 
                         // ── Public read-only ──────────────────────────────────
                         // Anyone can browse posts, stygians, and lookup data
+                        // (declared before the wildcard below — Spring Security
+                        // takes the first matching rule)
+                        .requestMatchers(HttpMethod.GET, "/api/posts/*/my-rating").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stygian/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/elements/**").permitAll()
