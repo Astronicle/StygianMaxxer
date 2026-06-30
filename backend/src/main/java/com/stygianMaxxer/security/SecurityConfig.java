@@ -67,6 +67,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/accounts/by-username/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/accounts/{accountId}").permitAll()
 
+                        // ── Same public endpoints, but for HEAD ───────────────
+                        // Spring Security matches GET and HEAD separately — it
+                        // does NOT infer HEAD permission from a GET rule, even
+                        // though Spring MVC auto-handles HEAD for any @GetMapping.
+                        // Needed for uptime monitors (e.g. UptimeRobot) that
+                        // probe with HEAD instead of GET.
+                        .requestMatchers(HttpMethod.HEAD, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/stygian/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/elements/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/wep-types/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/characters/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/bosses/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/accounts").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/accounts/by-username/**").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/api/accounts/{accountId}").permitAll()
+
                         // ── Everything else requires a valid JWT ──────────────
                         // POST /api/posts, PATCH /api/posts/{id}, DELETE /api/posts/{id}
                         // POST /api/posts/{id}/rate
