@@ -1,11 +1,13 @@
 package com.stygianMaxxer.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -15,21 +17,25 @@ public class CorsConfig {
      * Spring Security picks this bean up automatically when you call
      * cors(Customizer.withDefaults()) in SecurityConfig.
      *
-     * Allowed origins are intentionally strict — update the list to match
-     * wherever your frontend is actually hosted (local dev + prod URL).
+     * Allowed origins come from the ALLOWED_ORIGINS env var (comma-separated),
+     * defaulting to local dev URLs only. Set this on Fly.io to your real
+     * prod frontend URL — e.g.
+     *   ALLOWED_ORIGINS=https://stygianmaxxer.com,http://localhost:3000
      */
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}") String allowedOrigins
+    ) {
         CorsConfiguration config = new CorsConfiguration();
 
         // ── Origins ──────────────────────────────────────────────────────────
-        // Add your prod frontend URL here. Never use "*" in production when
-        // allowCredentials is true — browsers will block it.
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",   // local dev (e.g. React/Next)
-                "http://localhost:5173"    // local dev (e.g. Vite)
-                // "https://yourapp.com"  // <-- add prod URL here
-        ));
+        // Never use "*" in production when allowCredentials is true — browsers
+        // will block it.
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .toList();
+        config.setAllowedOrigins(origins);
 
         // ── Methods ───────────────────────────────────────────────────────────
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -52,3 +58,4 @@ public class CorsConfig {
         return source;
     }
 }
+
