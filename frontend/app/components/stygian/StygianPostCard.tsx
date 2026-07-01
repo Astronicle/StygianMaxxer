@@ -1,7 +1,8 @@
-import type { PostSummary } from "@/app/lib/api";
+import type { PostSummary, PostBossCharacterIcon } from "@/app/lib/api";
 
 const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
 const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
+const WEAPON_ICON_BASE = process.env.NEXT_PUBLIC_WEAPON_ICON_BASE_URL ?? "";
 
 type StygianPostCardProps = {
   post: PostSummary;
@@ -12,6 +13,37 @@ function formatClearTime(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+function CharacterChip({ c }: { c: PostBossCharacterIcon }) {
+  return (
+    <div className="flex items-center gap-1.5 bg-base-300/70 rounded-md px-1.5 py-1" title={c.charName}>
+      <img
+        src={`${CHAR_ICON_BASE}/${c.charSlug}/icon.webp`}
+        alt={c.charName}
+        className="w-7 h-7 rounded-md object-cover shrink-0"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+      />
+      <div className="text-[11px] leading-tight">
+        <p className="font-medium">
+          <span className="opacity-60">C{c.cons}</span> {c.charName}
+        </p>
+        {c.weaponName && (
+          <p className="opacity-70 flex items-center gap-1">
+            {c.weaponSlug && c.weaponTypeSlug && (
+              <img
+                src={`${WEAPON_ICON_BASE}/${c.weaponTypeSlug}/${c.weaponSlug}.png`}
+                alt={c.weaponName}
+                className="w-4 h-4 object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+            R{c.refinement} {c.weaponName}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function StygianPostCard({ post, highlightBossId }: StygianPostCardProps) {
@@ -26,7 +58,7 @@ export default function StygianPostCard({ post, highlightBossId }: StygianPostCa
       <div className="card-body gap-3 p-4">
         <h3 className="card-title text-base line-clamp-1">{post.title}</h3>
 
-        {/* Stygian version + difficulty + total cost */}
+        {/* Stygian version + difficulty + total cost + video */}
         <div className="flex items-center gap-2">
           <span className="badge badge-outline badge-xs">{post.stygianName}</span>
           <span
@@ -36,9 +68,21 @@ export default function StygianPostCard({ post, highlightBossId }: StygianPostCa
           >
             {post.difficulty}
           </span>
-          <span className="badge badge-xs badge-outline ml-auto" title="Total cost">
+          <span className="badge badge-xs badge-outline" title="Total cost">
             💰 {post.totalCost}
           </span>
+          {post.videoLink && (
+            <a
+              href={post.videoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="btn btn-circle btn-xs btn-info ml-auto"
+              title="Watch clear video"
+            >
+              ▶
+            </a>
+          )}
         </div>
 
         <div className="text-xs opacity-60">
@@ -76,18 +120,11 @@ export default function StygianPostCard({ post, highlightBossId }: StygianPostCa
                     </span>
                   </div>
 
-                  {/* Character icons */}
+                  {/* Characters — icon, cons, weapon + refinement */}
                   {boss.characters.length > 0 && (
-                    <div className="flex items-center gap-1 mt-1.5 pl-7">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                       {boss.characters.map((c) => (
-                        <img
-                          key={c.charId}
-                          src={`${CHAR_ICON_BASE}/${c.charSlug}/icon.webp`}
-                          alt={c.charName}
-                          title={c.charName}
-                          className="w-7 h-7 rounded-md object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                        />
+                        <CharacterChip key={c.charId} c={c} />
                       ))}
                     </div>
                   )}

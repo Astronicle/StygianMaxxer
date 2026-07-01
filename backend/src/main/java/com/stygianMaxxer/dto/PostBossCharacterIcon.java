@@ -1,13 +1,22 @@
 package com.stygianMaxxer.dto;
 
 /**
- * Minimal character reference — just enough to render an icon + name.
- * Used where weapon/artifact/refinement detail isn't needed (e.g. the boss
- * detail page's "characters used" list). See PostBossCharacterResponse for
- * the full per-slot breakdown (weapon, artifact set, refinement, cost).
+ * Character reference used on summary/browse cards (boss detail, stygian
+ * detail, post browse) — icon + name plus the weapon/refinement/cons detail
+ * needed to render those cards without pulling in the full per-slot cost
+ * breakdown. See PostBossCharacterResponse for the full detail-page version
+ * (adds per-slot cost contributions, artifact set, weapon type slug, etc.).
  */
 public record PostBossCharacterIcon(
         Short charId,
         String charSlug,
-        String charName
+        String charName,
+        short cons,
+        Short weaponId,
+        String weaponSlug,
+        String weaponName,
+        String weaponTypeSlug,
+        short weaponRarity,
+        short refinement,
+        boolean hasSig
 ) {}

@@ -93,6 +93,7 @@ export default function PostPage() {
     buildInfo: b.buildInfo ?? undefined,
     clearTime: b.clearTime,
     cost: b.cost,
+    videoLink: post.videoLink ?? undefined,
     characters: b.characters.map((c) => ({
       id: c.charId,
       name: c.charName,

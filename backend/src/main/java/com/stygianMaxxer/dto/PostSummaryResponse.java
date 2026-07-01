@@ -13,6 +13,7 @@ public record PostSummaryResponse(
         String stygianName,
         OffsetDateTime createdAt,
         Difficulty difficulty,
+        String videoLink,              // used to link browse/detail cards directly to the clear video
 
         Double averageRating,
         Long ratingCount,
@@ -42,25 +43,26 @@ public record PostSummaryResponse(
             String stygianName,
             OffsetDateTime createdAt,
             Difficulty difficulty,
+            String videoLink,
             Double averageRating,
             Long ratingCount,
             Long totalClearTime,
             BigDecimal totalCost
     ) {
-        this(postId, title, username, stygianName, createdAt, difficulty,
+        this(postId, title, username, stygianName, createdAt, difficulty, videoLink,
                 averageRating, ratingCount, totalClearTime, totalCost, List.of(), null);
     }
 
     public PostSummaryResponse withBosses(List<PostBossSummary> bosses) {
         return new PostSummaryResponse(
-                postId, title, username, stygianName, createdAt, difficulty,
+                postId, title, username, stygianName, createdAt, difficulty, videoLink,
                 averageRating, ratingCount, totalClearTime, totalCost, bosses, bossClear
         );
     }
 
     public PostSummaryResponse withBossClear(PostBossClearSummary bossClear) {
         return new PostSummaryResponse(
-                postId, title, username, stygianName, createdAt, difficulty,
+                postId, title, username, stygianName, createdAt, difficulty, videoLink,
                 averageRating, ratingCount, totalClearTime, totalCost, bosses, bossClear
         );
     }

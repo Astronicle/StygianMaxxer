@@ -58,6 +58,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             s.name,
             p.createdAt,
             p.difficulty,
+            p.videoLink,
             CAST(COALESCE(AVG(r.rating), 0.0) AS double),
             COUNT(r.rating),
             CAST(COALESCE((
@@ -95,7 +96,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
         AND (:maxTime     IS NULL OR (
                 SELECT COALESCE(SUM(pb7.clearTime), 0) FROM PostBoss pb7 WHERE pb7.post = p
             ) <= :maxTime)
-        GROUP BY p.postId, p.postTitle, a.username, s.name, p.createdAt, p.difficulty
+        GROUP BY p.postId, p.postTitle, a.username, s.name, p.createdAt, p.difficulty, p.videoLink
     """)
     Page<PostSummaryResponse> findPostSummaries(
             @Param("stygianId")  Short stygianId,
@@ -134,11 +135,14 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     // PostBossSummary. Used on the stygian/browse pages where bossId is not
     // filtered. Ordered by slot so character order is consistent.
     @Query("""
-        SELECT p.postId, pb.boss.id, c.id, c.slug, c.name
+        SELECT p.postId, pb.boss.id, c.id, c.slug, c.name, pbc.cons,
+               w.id, w.slug, w.name, wt.slug, w.rarity, pbc.refinement, pbc.hasSig
         FROM PostBoss pb
         JOIN pb.post p
         JOIN pb.characters pbc
         JOIN pbc.character c
+        JOIN pbc.weapon w
+        JOIN w.weaponType wt
         WHERE p.postId IN :postIds
         ORDER BY p.postId, pb.boss.id, pbc.id.slot
     """)

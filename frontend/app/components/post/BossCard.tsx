@@ -22,6 +22,7 @@ type Boss = {
   buildInfo?: string;
   clearTime?: number; // seconds, 0-120
   cost?: number;      // auto-calculated team cost for this boss
+  videoLink?: string; // link to the clear video
   characters: Character[];
 };
 
@@ -31,7 +32,7 @@ function formatClearTime(seconds: number) {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export default function BossCard({ name, icon, buildInfo, clearTime, cost, characters }: Boss) {
+export default function BossCard({ name, icon, buildInfo, clearTime, cost, videoLink, characters }: Boss) {
   return (
     <div className="card bg-base-200 shadow-md">
       <div className="card-body gap-4">
@@ -49,6 +50,17 @@ export default function BossCard({ name, icon, buildInfo, clearTime, cost, chara
               <span className="badge badge-ghost">
                 ⏱ {formatClearTime(clearTime)}
               </span>
+            )}
+            {videoLink && (
+              <a
+                href={videoLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-circle btn-sm btn-info"
+                title="Watch clear video"
+              >
+                ▶
+              </a>
             )}
           </div>
         </div>

@@ -172,12 +172,21 @@ export interface PostBossSummary {
   characters: PostBossCharacterIcon[];
 }
 
-// Minimal character reference — just enough for an icon + name (no weapon/
-// artifact/refinement detail). Used in PostBossClearSummary below.
+// Character reference used on summary/browse cards — icon + name plus
+// weapon/refinement/cons detail (no per-slot cost breakdown or artifact
+// set — see PostBossCharacter for the full detail-page version).
 export interface PostBossCharacterIcon {
   charId: number;    // backend: Short
   charSlug: string;  // used to build Supabase icon URL
   charName: string;
+  cons: number;          // backend: short
+  weaponId: number | null;
+  weaponSlug: string | null;
+  weaponName: string | null;
+  weaponTypeSlug: string | null;
+  weaponRarity: number;  // backend: short
+  refinement: number;    // backend: short
+  hasSig: boolean;
 }
 
 // This-boss-only clear summary, present on PostSummary only when the
@@ -200,6 +209,7 @@ export interface PostSummary {
   averageRating: number | null; // null if no ratings yet
   ratingCount: number;          // NOTE: backend returns Long — JS treats it as number fine
   difficulty: "Fearless" | "Dire";
+  videoLink: string | null;     // clear video — used for "watch clip" buttons on cards
   totalClearTime: number;       // sum of every boss's clearTime in this post, in seconds
   totalCost: number;             // sum of every boss's cost in this post (backend: BigDecimal)
   bosses: PostBossSummary[];

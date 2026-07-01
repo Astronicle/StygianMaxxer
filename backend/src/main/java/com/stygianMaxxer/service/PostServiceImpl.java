@@ -185,16 +185,28 @@ public class PostServiceImpl implements PostService {
         // ── Batch-fetch character icons for every boss across this page ─────────
         java.util.Map<String, List<PostBossCharacterIcon>> charsByPostBoss = new java.util.LinkedHashMap<>();
         for (Object[] row : postRepository.findCharacterIconsForAllBossesInPosts(postIds)) {
-            Integer postId = (Integer) row[0];
-            Short   bId    = (Short)   row[1];
-            Short   cId    = (Short)   row[2];
-            String  cSlug  = (String)  row[3];
-            String  cName  = (String)  row[4];
+            Integer postId         = (Integer) row[0];
+            Short   bId            = (Short)   row[1];
+            Short   cId            = (Short)   row[2];
+            String  cSlug          = (String)  row[3];
+            String  cName          = (String)  row[4];
+            short   cons           = (Short)   row[5];
+            Short   weaponId       = (Short)   row[6];
+            String  weaponSlug     = (String)  row[7];
+            String  weaponName     = (String)  row[8];
+            String  weaponTypeSlug = (String)  row[9];
+            short   weaponRarity   = (Short)   row[10];
+            short   refinement     = (Short)   row[11];
+            boolean hasSig         = (Boolean) row[12];
 
             String key = postId + ":" + bId;
             charsByPostBoss
                     .computeIfAbsent(key, k -> new java.util.ArrayList<>())
-                    .add(new PostBossCharacterIcon(cId, cSlug, cName));
+                    .add(new PostBossCharacterIcon(
+                            cId, cSlug, cName, cons,
+                            weaponId, weaponSlug, weaponName, weaponTypeSlug, weaponRarity,
+                            refinement, hasSig
+                    ));
         }
 
         // ── Batch-fetch boss rows (clearTime, cost) for this page ───────────────

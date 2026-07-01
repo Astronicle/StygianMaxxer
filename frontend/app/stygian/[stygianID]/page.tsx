@@ -146,7 +146,7 @@ export default function StygianDetailPage() {
   // Filters
   const [selectedBossId, setSelectedBossId] = useState<number | undefined>();
   const [quick, setQuick] = useState<QuickFilters>({});
-  const [advanced, setAdvanced] = useState<AF>({});
+  const [advanced, setAdvanced] = useState<AF>({ allBossesOnly: true });
   const [modalOpen, setModalOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -182,7 +182,7 @@ export default function StygianDetailPage() {
       try {
         const [stygianData, postsPage] = await Promise.all([
           apiGetStygian(stygianId),
-          apiGetPostsFiltered({ stygianId, page: 0, size: PAGE_SIZE }),
+          apiGetPostsFiltered({ stygianId, allBossesOnly: true, page: 0, size: PAGE_SIZE }),
         ]);
         setStygian(stygianData);
         setPosts(postsPage.content);
