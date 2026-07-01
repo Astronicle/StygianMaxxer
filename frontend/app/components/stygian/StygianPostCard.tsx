@@ -6,7 +6,7 @@ const WEAPON_ICON_BASE = process.env.NEXT_PUBLIC_WEAPON_ICON_BASE_URL ?? "";
 
 type StygianPostCardProps = {
   post: PostSummary;
-  highlightBossId?: number; // when a boss filter chip is active, highlight that boss row
+  highlightBossId?: number; // when a boss filter chip is active, highlight that boss column
 };
 
 function formatClearTime(seconds: number) {
@@ -15,33 +15,65 @@ function formatClearTime(seconds: number) {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-function CharacterChip({ c }: { c: PostBossCharacterIcon }) {
+function CharacterRow({ c }: { c: PostBossCharacterIcon }) {
   return (
-    <div className="flex items-center gap-1.5 bg-base-300/70 rounded-md px-1.5 py-1" title={c.charName}>
+    <div className="flex items-center gap-2">
       <img
         src={`${CHAR_ICON_BASE}/${c.charSlug}/icon.webp`}
         alt={c.charName}
-        className="w-7 h-7 rounded-md object-cover shrink-0"
+        className="w-9 h-9 rounded-md object-cover shrink-0"
         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
       />
-      <div className="text-[11px] leading-tight">
-        <p className="font-medium">
+      <div className="text-xs leading-tight min-w-0">
+        <p className="font-medium truncate">
           <span className="opacity-60">C{c.cons}</span> {c.charName}
         </p>
         {c.weaponName && (
-          <p className="opacity-70 flex items-center gap-1">
+          <p className="opacity-70 flex items-center gap-1 truncate">
             {c.weaponSlug && c.weaponTypeSlug && (
               <img
                 src={`${WEAPON_ICON_BASE}/${c.weaponTypeSlug}/${c.weaponSlug}.png`}
                 alt={c.weaponName}
-                className="w-4 h-4 object-contain"
+                className="w-4 h-4 object-contain shrink-0"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
             )}
-            R{c.refinement} {c.weaponName}
+            <span className="truncate">R{c.refinement} {c.weaponName}</span>
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+function BossColumn({ boss, highlighted }: { boss: PostSummary["bosses"][number]; highlighted: boolean }) {
+  return (
+    <div
+      className={`flex-1 min-w-[220px] rounded-lg p-3 space-y-2 transition-colors ${
+        highlighted ? "bg-primary/15 ring-1 ring-primary" : "bg-base-300/40"
+      }`}
+    >
+      <div className="flex items-center gap-2 text-sm">
+        <img
+          src={`${BOSS_ICON_BASE}/${boss.bossSlug}/model.webp`}
+          alt={boss.bossName}
+          className="w-6 h-6 object-contain shrink-0"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+        <span className={`font-medium truncate ${highlighted ? "text-primary" : ""}`}>{boss.bossName}</span>
+        <span className="ml-auto flex items-center gap-2 shrink-0 text-xs opacity-60">
+          <span title="Cost">💰 {boss.cost}</span>
+          <span title="Clear time">⏱ {formatClearTime(boss.clearTime)}</span>
+        </span>
+      </div>
+
+      {boss.characters.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {boss.characters.map((c) => (
+            <CharacterRow key={c.charId} c={c} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -54,87 +86,58 @@ export default function StygianPostCard({ post, highlightBossId }: StygianPostCa
   });
 
   return (
-    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
+    <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow w-full">
       <div className="card-body gap-3 p-4">
-        <h3 className="card-title text-base line-clamp-1">{post.title}</h3>
+        <div className="flex items-start gap-3 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <h3 className="card-title text-lg">{post.title}</h3>
+            <div className="flex flex-wrap gap-2 text-sm opacity-70 mt-1">
+              <span>By {post.username}</span>
+              <span>•</span>
+              <span>{formattedDate}</span>
+            </div>
+          </div>
 
-        {/* Stygian version + difficulty + total cost + video */}
-        <div className="flex items-center gap-2">
-          <span className="badge badge-outline badge-xs">{post.stygianName}</span>
-          <span
-            className={`badge badge-xs font-semibold ${
-              post.difficulty === "Dire" ? "badge-error" : "badge-warning"
-            }`}
-          >
-            {post.difficulty}
-          </span>
-          <span className="badge badge-xs badge-outline" title="Total cost">
-            💰 {post.totalCost}
-          </span>
-          {post.videoLink && (
-            <a
-              href={post.videoLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="btn btn-circle btn-xs btn-info ml-auto"
-              title="Watch clear video"
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="badge badge-outline badge-sm">{post.stygianName}</span>
+            <span
+              className={`badge badge-sm font-semibold ${
+                post.difficulty === "Dire" ? "badge-error" : "badge-warning"
+              }`}
             >
-              ▶
-            </a>
-          )}
+              {post.difficulty}
+            </span>
+            <span className="badge badge-sm badge-outline" title="Total cost">
+              💰 {post.totalCost}
+            </span>
+            {post.videoLink && (
+              <a
+                href={post.videoLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="btn btn-circle btn-xs btn-info"
+                title="Watch clear video"
+              >
+                ▶
+              </a>
+            )}
+          </div>
         </div>
 
-        <div className="text-xs opacity-60">
-          By {post.username} · {formattedDate}
-        </div>
-
-        {/* Per-boss breakdown */}
+        {/* Bosses laid out horizontally, characters underneath each */}
         {post.bosses.length > 0 && (
-          <div className="space-y-2 mt-1">
-            {post.bosses.map((boss) => {
-              const isHighlighted = highlightBossId != null && boss.bossId === highlightBossId;
-              return (
-                <div
-                  key={boss.bossId}
-                  className={`rounded-lg p-2 transition-colors ${
-                    isHighlighted
-                      ? "bg-primary/15 ring-1 ring-primary"
-                      : "bg-base-300/50"
-                  }`}
-                >
-                  {/* Boss header */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <img
-                      src={`${BOSS_ICON_BASE}/${boss.bossSlug}/model.webp`}
-                      alt={boss.bossName}
-                      className="w-5 h-5 object-contain shrink-0"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
-                    <span className={`font-medium truncate ${isHighlighted ? "text-primary" : ""}`}>
-                      {boss.bossName}
-                    </span>
-                    <span className="ml-auto flex items-center gap-2 shrink-0 text-xs opacity-60">
-                      <span title="Cost">💰 {boss.cost}</span>
-                      <span title="Clear time">⏱ {formatClearTime(boss.clearTime)}</span>
-                    </span>
-                  </div>
-
-                  {/* Characters — icon, cons, weapon + refinement */}
-                  {boss.characters.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                      {boss.characters.map((c) => (
-                        <CharacterChip key={c.charId} c={c} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="flex flex-wrap gap-3">
+            {post.bosses.map((boss) => (
+              <BossColumn
+                key={boss.bossId}
+                boss={boss}
+                highlighted={highlightBossId != null && boss.bossId === highlightBossId}
+              />
+            ))}
           </div>
         )}
 
-        {/* Rating + total clear time */}
         <div className="flex items-center gap-1 text-xs mt-1">
           <span>⭐</span>
           <span className="font-medium">

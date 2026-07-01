@@ -274,9 +274,9 @@ export default function StygianDetailPage() {
           <div className="alert alert-info">No posts match the current filters.</div>
         ) : (
           <>
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {posts.map((post) => (
-                <Link key={post.postId} href={`/post/${post.postId}`} className="h-full">
+                <Link key={post.postId} href={`/post/${post.postId}`} className="block">
                   <StygianPostCard post={post} highlightBossId={selectedBossId} />
                 </Link>
               ))}
