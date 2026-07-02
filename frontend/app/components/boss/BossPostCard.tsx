@@ -1,4 +1,5 @@
 import type { PostSummary, PostBossCharacterIcon } from "@/app/lib/api";
+import { Coins, Timer, Star, PlayCircle, Link as LinkIcon } from "lucide-react";
 
 const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
 const WEAPON_ICON_BASE = process.env.NEXT_PUBLIC_WEAPON_ICON_BASE_URL ?? "";
@@ -76,14 +77,14 @@ export default function BossPostCard({ post, highlightBossId }: BossPostCardProp
         {/* Stat bar: cost / time / video link */}
         {scoped && (
           <div className="flex items-center bg-base-300/50 rounded-lg px-4 py-2 text-sm">
-            <span className="opacity-70">
-              COST: <span className="font-bold ml-1">{scoped.cost}</span>
+            <span className="opacity-70 flex items-center gap-1.5">
+              <Coins size={14} /> COST: <span className="font-bold">{scoped.cost}</span>
             </span>
-            <span className="opacity-70 mx-auto">
-              TIME: <span className="font-bold ml-1">{formatClearTime(scoped.clearTime)}</span>
+            <span className="opacity-70 mx-auto flex items-center gap-1.5">
+              <Timer size={14} /> TIME: <span className="font-bold">{formatClearTime(scoped.clearTime)}</span>
             </span>
             <span className="flex items-center gap-2 opacity-70">
-              LINK:
+              <span className="flex items-center gap-1"><LinkIcon size={14} /> LINK:</span>
               {post.videoLink ? (
                 <a
                   href={post.videoLink}
@@ -93,7 +94,7 @@ export default function BossPostCard({ post, highlightBossId }: BossPostCardProp
                   className="btn btn-circle btn-xs btn-info"
                   title="Watch clear video"
                 >
-                  ▶
+                  <PlayCircle size={14} />
                 </a>
               ) : (
                 <span className="opacity-40">—</span>
@@ -112,7 +113,7 @@ export default function BossPostCard({ post, highlightBossId }: BossPostCardProp
         )}
 
         <div className="flex items-center gap-1 text-xs">
-          <span>⭐</span>
+          <Star size={14} className="fill-warning text-warning" />
           <span className="font-medium">{post.averageRating != null ? post.averageRating.toFixed(1) : "—"}</span>
           <span className="opacity-60">({post.ratingCount} ratings)</span>
         </div>

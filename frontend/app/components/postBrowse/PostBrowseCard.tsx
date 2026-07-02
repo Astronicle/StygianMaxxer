@@ -1,4 +1,5 @@
 import type { PostSummary, PostBossCharacterIcon } from "@/app/lib/api";
+import { Coins, Timer, Star, PlayCircle } from "lucide-react";
 
 const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
 const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
@@ -12,24 +13,24 @@ function formatClearTime(seconds: number) {
 
 function CharacterRow({ c }: { c: PostBossCharacterIcon }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <img
         src={`${CHAR_ICON_BASE}/${c.charSlug}/icon.webp`}
         alt={c.charName}
-        className="w-9 h-9 rounded-md object-cover shrink-0"
+        className="w-12 h-12 rounded-md object-cover shrink-0"
         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
       />
-      <div className="text-xs leading-tight min-w-0">
-        <p className="font-medium truncate">
+      <div className="text-sm leading-tight min-w-0">
+        <p className="font-semibold truncate">
           <span className="opacity-60">C{c.cons}</span> {c.charName}
         </p>
         {c.weaponName && (
-          <p className="opacity-70 flex items-center gap-1 truncate">
+          <p className="opacity-70 flex items-center gap-1.5 truncate">
             {c.weaponSlug && c.weaponTypeSlug && (
               <img
                 src={`${WEAPON_ICON_BASE}/${c.weaponTypeSlug}/${c.weaponSlug}.png`}
                 alt={c.weaponName}
-                className="w-4 h-4 object-contain shrink-0"
+                className="w-5 h-5 object-contain shrink-0"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               />
             )}
@@ -43,22 +44,23 @@ function CharacterRow({ c }: { c: PostBossCharacterIcon }) {
 
 function BossColumn({ boss }: { boss: PostSummary["bosses"][number] }) {
   return (
-    <div className="flex-1 min-w-[220px] bg-base-300/40 rounded-lg p-3 space-y-2">
-      <div className="flex items-center gap-2 text-sm">
+    <div className="flex-1 min-w-[280px] bg-base-300/40 rounded-lg p-4 space-y-3">
+      <div className="flex items-center gap-3 text-lg">
         <img
           src={`${BOSS_ICON_BASE}/${boss.bossSlug}/model.webp`}
           alt={boss.bossName}
-          className="w-6 h-6 object-contain shrink-0"
+          className="w-10 h-10 object-contain shrink-0"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
-        <span className="font-medium truncate">{boss.bossName}</span>
-        <span className="ml-auto text-xs opacity-60 shrink-0">
-          {boss.cost}c · {formatClearTime(boss.clearTime)}
+        <span className="font-bold truncate">{boss.bossName}</span>
+        <span className="ml-auto flex items-center gap-3 text-base opacity-60 shrink-0">
+          <span className="flex items-center gap-1.5"><Coins size={18} />{boss.cost}</span>
+          <span className="flex items-center gap-1.5"><Timer size={18} />{formatClearTime(boss.clearTime)}</span>
         </span>
       </div>
 
       {boss.characters.length > 0 && (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2.5">
           {boss.characters.map((c) => (
             <CharacterRow key={c.charId} c={c} />
           ))}
@@ -99,8 +101,8 @@ export default function PostBrowseCard({
             <span className={`badge badge-sm font-semibold ${difficulty === "Dire" ? "badge-error" : "badge-warning"}`}>
               {difficulty}
             </span>
-            <span className="badge badge-sm badge-outline" title="Total cost">
-              💰 {totalCost}
+            <span className="badge badge-sm badge-outline gap-1" title="Total cost">
+              <Coins size={12} /> {totalCost}
             </span>
             {videoLink && (
               <a
@@ -111,7 +113,7 @@ export default function PostBrowseCard({
                 className="btn btn-circle btn-xs btn-info"
                 title="Watch clear video"
               >
-                ▶
+                <PlayCircle size={14} />
               </a>
             )}
           </div>
@@ -119,7 +121,7 @@ export default function PostBrowseCard({
 
         {/* Bosses laid out horizontally, characters underneath each */}
         {bosses.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             {bosses.map((b) => (
               <BossColumn key={b.bossId} boss={b} />
             ))}
@@ -128,12 +130,12 @@ export default function PostBrowseCard({
 
         <div className="flex items-center gap-3 text-sm">
           <div className="flex items-center gap-1">
-            <span>⭐</span>
+            <Star size={14} className="fill-warning text-warning" />
             <span className="font-medium">{averageRating != null ? averageRating.toFixed(1) : "—"}</span>
             <span className="opacity-60">({ratingCount} ratings)</span>
           </div>
           <span className="opacity-40">•</span>
-          <span className="opacity-80">⏱ {formatClearTime(totalClearTime)} total</span>
+          <span className="opacity-80 flex items-center gap-1"><Timer size={14} />{formatClearTime(totalClearTime)} total</span>
         </div>
       </div>
     </div>

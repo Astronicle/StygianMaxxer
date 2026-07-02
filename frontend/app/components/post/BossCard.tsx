@@ -1,4 +1,5 @@
 import CharacterBadge from "./CharacterBadge";
+import { Coins, Timer, PlayCircle } from "lucide-react";
 
 type Character = {
   id: number;
@@ -42,13 +43,13 @@ export default function BossCard({ name, icon, buildInfo, clearTime, cost, video
           <h3 className="text-lg font-semibold">{name}</h3>
           <div className="ml-auto flex items-center gap-2">
             {typeof cost === "number" && (
-              <span className="badge badge-warning badge-outline" title="Team cost">
-                💰 {cost}
+              <span className="badge badge-warning badge-outline gap-1" title="Team cost">
+                <Coins size={14} /> {cost}
               </span>
             )}
             {typeof clearTime === "number" && (
-              <span className="badge badge-ghost">
-                ⏱ {formatClearTime(clearTime)}
+              <span className="badge badge-ghost gap-1">
+                <Timer size={14} /> {formatClearTime(clearTime)}
               </span>
             )}
             {videoLink && (
@@ -59,7 +60,7 @@ export default function BossCard({ name, icon, buildInfo, clearTime, cost, video
                 className="btn btn-circle btn-sm btn-info"
                 title="Watch clear video"
               >
-                ▶
+                <PlayCircle size={16} />
               </a>
             )}
           </div>

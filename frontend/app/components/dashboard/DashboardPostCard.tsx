@@ -5,6 +5,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Star, Pencil, Trash2 } from "lucide-react";
 import { apiDeletePost } from "@/app/lib/api";
 
 type DashboardPostCardProps = {
@@ -73,19 +74,22 @@ export default function DashboardPostCard({
 
           <div className="flex items-center justify-between text-sm opacity-70 mt-1">
             <span>{formattedDate}</span>
-            <span>⭐ {rating > 0 ? rating.toFixed(1) : "—"} / 5</span>
+            <span className="flex items-center gap-1">
+              <Star size={14} className="fill-warning text-warning" />
+              {rating > 0 ? rating.toFixed(1) : "—"} / 5
+            </span>
           </div>
 
           {/* Action buttons */}
           <div className="flex gap-2 mt-2">
-            <Link href={`/post/${postID}/edit`} className="btn btn-xs btn-outline flex-1">
-              Edit
+            <Link href={`/post/${postID}/edit`} className="btn btn-xs btn-outline flex-1 gap-1">
+              <Pencil size={12} /> Edit
             </Link>
             <button
-              className="btn btn-xs btn-error btn-outline flex-1"
+              className="btn btn-xs btn-error btn-outline flex-1 gap-1"
               onClick={() => { setConfirming(true); setDeleteError(null); }}
             >
-              Delete
+              <Trash2 size={12} /> Delete
             </button>
           </div>
 

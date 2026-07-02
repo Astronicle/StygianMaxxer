@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import type { Character, PostFilterParams, StygianBoss } from "@/app/lib/api";
 import { apiGetCharacters } from "@/app/lib/api";
 
@@ -252,7 +253,7 @@ export default function AdvancedFilterModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
           <h2 className="text-xl font-bold">Advanced Filter</h2>
-          <button type="button" className="btn btn-sm btn-ghost btn-circle" onClick={onClose}>✕</button>
+          <button type="button" className="btn btn-sm btn-ghost btn-circle" onClick={onClose}><X size={16} /></button>
         </div>
 
         {/* Body */}

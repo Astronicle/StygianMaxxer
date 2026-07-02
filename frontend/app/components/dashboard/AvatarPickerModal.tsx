@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
 import { apiGetCharacters, type Character } from "@/app/lib/api";
 import { avatarIconUrl } from "@/app/lib/avatar";
 
@@ -100,7 +101,7 @@ export default function AvatarPickerModal({
             onClick={onClose}
             disabled={saving}
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 
