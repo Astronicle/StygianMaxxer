@@ -10,8 +10,14 @@ import {
   defaultRefinementForRarity,
   calculateCharacterCost,
   calculateWeaponCost,
+  ALL_BOSS_TAGS,
+  BOSS_TAG_LABELS,
   type PostBossUpdateEntry,
+  type PostTag,
+  type BossTag,
 } from "@/app/lib/api";
+import TagPicker from "@/app/components/tags/TagPicker";
+import PostTagPicker from "@/app/components/tags/PostTagPicker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +64,7 @@ type BossEntry = {
   bossSlug: string;
   buildInfo: string;
   clearTime: number;  // seconds, 0-120
+  tags: Set<BossTag>;
   characters: CharacterEntry[];
 };
 
@@ -78,6 +85,7 @@ export default function PostEditPage() {
   const [description, setDescription] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [difficulty, setDifficulty] = useState<"Fearless" | "Dire">("Fearless");
+  const [postTags, setPostTags] = useState<Set<PostTag>>(new Set());
 
   // ── Boss entries (mirrors the current post's bosses)
   const [bossEntries, setBossEntries] = useState<BossEntry[]>([]);
@@ -122,6 +130,13 @@ export default function PostEditPage() {
         setDescription(post.description ?? "");
         setVideoLink(post.videoLink ?? "");
         setDifficulty(post.difficulty ?? "Fearless");
+        {
+          const loadedTags = new Set(post.tags ?? []);
+          if (!loadedTags.has("MINE") && !loadedTags.has("NOT_MINE")) {
+            loadedTags.add("NOT_MINE");
+          }
+          setPostTags(loadedTags);
+        }
         setBossEntries(
           post.bosses.map((b) => ({
             bossId: b.bossId,
@@ -129,6 +144,7 @@ export default function PostEditPage() {
             bossSlug: b.bossSlug,
             buildInfo: b.buildInfo ?? "",
             clearTime: b.clearTime,
+            tags: new Set(b.tags ?? []),
             characters: b.characters.map((c) => ({
               charId: c.charId,
               charName: c.charName,
@@ -166,6 +182,12 @@ export default function PostEditPage() {
   function setClearTime(bossId: number, clearTime: number) {
     setBossEntries((prev) =>
       prev.map((b) => (b.bossId === bossId ? { ...b, clearTime } : b))
+    );
+  }
+
+  function setBossTags(bossId: number, tags: Set<BossTag>) {
+    setBossEntries((prev) =>
+      prev.map((b) => (b.bossId === bossId ? { ...b, tags } : b))
     );
   }
 
@@ -286,6 +308,7 @@ export default function PostEditPage() {
         bossId: b.bossId,
         buildInfo: b.buildInfo,
         clearTime: b.clearTime,
+        tags: Array.from(b.tags),
         characters: b.characters.map((c) => ({
           charId: c.charId,
           weaponId: c.weaponId as number,
@@ -297,7 +320,7 @@ export default function PostEditPage() {
         })),
       }));
 
-      await apiUpdatePost(postId, { title, description, videoLink, difficulty, bosses });
+      await apiUpdatePost(postId, { title, description, videoLink, difficulty, tags: Array.from(postTags), bosses });
       router.push(`/post/${postId}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Update failed");
@@ -400,6 +423,8 @@ export default function PostEditPage() {
               <option value="Dire">Dire</option>
             </select>
           </div>
+
+          <PostTagPicker selected={postTags} onChange={setPostTags} />
         </section>
 
         {/* ── Boss sections ─────────────────────────────────────────────────── */}
@@ -534,6 +559,16 @@ export default function PostEditPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Boss-specific tags */}
+                  <TagPicker
+                    label="Boss tags"
+                    allTags={ALL_BOSS_TAGS}
+                    labels={BOSS_TAG_LABELS}
+                    selected={boss.tags}
+                    onChange={(tags) => setBossTags(boss.bossId, tags)}
+                    size="xs"
+                  />
 
                   {/* Character picker */}
                   <div className="form-control">

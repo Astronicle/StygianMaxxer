@@ -31,6 +31,42 @@ public class PostServiceImpl implements PostService {
     private final PostRatingRepository postRatingRepository;
     private final EntityManager entityManager;
 
+    // Post-wide tag groups that are mutually exclusive within themselves —
+    // mirrors the row grouping in PostTagPicker on the frontend, but enforced
+    // here too since the API can be called directly.
+    private static final java.util.List<java.util.Set<com.stygianMaxxer.model.PostTag>> EXCLUSIVE_POST_TAG_GROUPS =
+            java.util.List.of(
+                    java.util.Set.of(com.stygianMaxxer.model.PostTag.MINE, com.stygianMaxxer.model.PostTag.NOT_MINE),
+                    java.util.Set.of(com.stygianMaxxer.model.PostTag.FPS_30, com.stygianMaxxer.model.PostTag.FPS_60, com.stygianMaxxer.model.PostTag.FPS_120),
+                    java.util.Set.of(com.stygianMaxxer.model.PostTag.HIGH_PING, com.stygianMaxxer.model.PostTag.LOW_PING)
+            );
+
+    // Post-wide tags always carry an explicit Mine/Not Mine stance. If the
+    // submitter didn't pick either, default to NOT_MINE rather than leaving
+    // it ambiguous — see PostTag / the "How to Use Tags" section on /about.
+    // Also rejects tag sets that violate the mutually-exclusive groupings
+    // above (e.g. both 30 FPS and 60 FPS at once).
+    private static java.util.Set<com.stygianMaxxer.model.PostTag> normalizePostTags(
+            java.util.Set<com.stygianMaxxer.model.PostTag> tags
+    ) {
+        java.util.Set<com.stygianMaxxer.model.PostTag> normalized =
+                tags == null ? new java.util.HashSet<>() : new java.util.HashSet<>(tags);
+
+        for (java.util.Set<com.stygianMaxxer.model.PostTag> group : EXCLUSIVE_POST_TAG_GROUPS) {
+            long matches = normalized.stream().filter(group::contains).count();
+            if (matches > 1) {
+                throw new IllegalArgumentException(
+                        "Tags " + group + " are mutually exclusive — only one may be selected");
+            }
+        }
+
+        if (!normalized.contains(com.stygianMaxxer.model.PostTag.MINE)
+                && !normalized.contains(com.stygianMaxxer.model.PostTag.NOT_MINE)) {
+            normalized.add(com.stygianMaxxer.model.PostTag.NOT_MINE);
+        }
+        return normalized;
+    }
+
     // ── Create ────────────────────────────────────────────────────────────────
 
     @Override
@@ -50,6 +86,7 @@ public class PostServiceImpl implements PostService {
                 .postDesc(request.description())
                 .videoLink(request.videoLink())
                 .difficulty(request.difficulty())
+                .tags(normalizePostTags(request.tags()))
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
@@ -73,6 +110,7 @@ public class PostServiceImpl implements PostService {
                     .boss(boss)
                     .buildInfo(bossReq.buildInfo())
                     .clearTime(bossReq.clearTime())
+                    .tags(bossReq.tags() == null ? new java.util.HashSet<>() : new java.util.HashSet<>(bossReq.tags()))
                     .build();
 
             java.math.BigDecimal bossCost = java.math.BigDecimal.ZERO;
@@ -371,6 +409,9 @@ public class PostServiceImpl implements PostService {
         if (request.difficulty() != null) {
             post.setDifficulty(request.difficulty());
         }
+        if (request.tags() != null) {
+            post.setTags(normalizePostTags(request.tags()));
+        }
 
         // ── Optional boss replacement ─────────────────────────────────────────
         // If the client sends a bosses list, fully replace the existing ones.
@@ -399,6 +440,7 @@ public class PostServiceImpl implements PostService {
                         .boss(boss)
                         .buildInfo(bossReq.buildInfo())
                         .clearTime(bossReq.clearTime())
+                        .tags(bossReq.tags() == null ? new java.util.HashSet<>() : new java.util.HashSet<>(bossReq.tags()))
                         .build();
 
                 java.math.BigDecimal bossCost = java.math.BigDecimal.ZERO;

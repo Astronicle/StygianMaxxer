@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -44,6 +46,15 @@ public class PostBoss {
 
     @Column(name = "cost", nullable = false, precision = 4, scale = 1)
     private java.math.BigDecimal cost;   // auto-calculated team cost — see CostCalculator
+
+    // Boss-specific tags (Ping Dependent, tool/execution tags, Cheese,
+    // Over Level — see BossTag). Post-wide tags live on Post instead.
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_boss_tag", joinColumns = @JoinColumn(name = "post_boss_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tag", nullable = false)
+    @Builder.Default
+    private Set<BossTag> tags = new HashSet<>();
 
     @OneToMany(
             mappedBy = "postBoss",

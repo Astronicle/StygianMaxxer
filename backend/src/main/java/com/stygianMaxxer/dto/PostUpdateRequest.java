@@ -3,7 +3,9 @@ package com.stygianMaxxer.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import com.stygianMaxxer.model.Difficulty;
+import com.stygianMaxxer.model.PostTag;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Request body for PUT /api/posts/{postId}.
@@ -27,6 +29,9 @@ public record PostUpdateRequest(
 
         /** Leave null to keep the existing difficulty. */
         Difficulty difficulty,
+
+        /** Leave null to keep the existing post-wide tags; fully replaces them otherwise. */
+        Set<PostTag> tags,
 
         /**
          * Leave null to keep the existing bosses unchanged.

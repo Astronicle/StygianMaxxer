@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import {
   apiGetPost,
   apiGetPostRatingSummary,
+  POST_TAG_LABELS,
   type PostDetail,
   type RatingSummary,
 } from "@/app/lib/api";
@@ -12,6 +13,7 @@ import PostHeader from "@/app/components/post/PostHeader";
 import PostRatingPanel from "@/app/components/post/PostRatingPanel";
 import VideoEmbed from "@/app/components/post/VideoEmbed";
 import BossCard from "@/app/components/post/BossCard";
+import TagBadges from "@/app/components/tags/TagBadges";
 
 const BOSS_ICON_BASE = process.env.NEXT_PUBLIC_BOSS_ICON_BASE_URL ?? "";
 const CHAR_ICON_BASE = process.env.NEXT_PUBLIC_CHAR_ICON_BASE_URL ?? "";
@@ -94,6 +96,7 @@ export default function PostPage() {
     clearTime: b.clearTime,
     cost: b.cost,
     videoLink: post.videoLink ?? undefined,
+    tags: b.tags,
     characters: b.characters.map((c) => ({
       id: c.charId,
       name: c.charName,
@@ -114,8 +117,11 @@ export default function PostPage() {
     <div className="max-w-5xl mx-auto p-6 space-y-10">
       <PostHeader {...headerProps} />
 
-      <div className="badge badge-outline">
-        {post.stygian.stygianName} {post.stygian.version}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="badge badge-outline">
+          {post.stygian.stygianName} {post.stygian.version}
+        </div>
+        <TagBadges tags={post.tags} labels={POST_TAG_LABELS} />
       </div>
 
       {rating && (

@@ -42,6 +42,7 @@ public final class PostMapper {
                 post.getPostDesc(),
                 post.getVideoLink(),
                 post.getDifficulty(),
+                post.getTags() == null ? java.util.Set.of() : post.getTags(),
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
                 accountSummary,
@@ -69,6 +70,7 @@ public final class PostMapper {
                 postBoss.getBuildInfo(),
                 postBoss.getClearTime(),
                 postBoss.getCost(),
+                postBoss.getTags() == null ? java.util.Set.of() : postBoss.getTags(),
                 characters
         );
     }

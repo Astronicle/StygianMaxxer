@@ -8,8 +8,14 @@ import {
   defaultRefinementForRarity,
   calculateCharacterCost,
   calculateWeaponCost,
+  ALL_BOSS_TAGS,
+  BOSS_TAG_LABELS,
   type Stygian,
+  type PostTag,
+  type BossTag,
 } from "@/app/lib/api";
+import TagPicker from "@/app/components/tags/TagPicker";
+import PostTagPicker from "@/app/components/tags/PostTagPicker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +38,7 @@ type BossEntry = {
   bossSlug: string;
   buildInfo: string;
   clearTime: number;  // seconds, 0-120
+  tags: Set<BossTag>;
   characters: CharacterEntry[];
 };
 
@@ -73,6 +80,7 @@ export default function PostCreatePage() {
   const [description, setDescription] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [difficulty, setDifficulty] = useState<"Fearless" | "Dire">("Fearless");
+  const [postTags, setPostTags] = useState<Set<PostTag>>(new Set(["NOT_MINE"]));
 
   // ── Lookup data loaded from the API
   const [stygians, setStygians] = useState<Stygian[]>([]);
@@ -142,6 +150,7 @@ export default function PostCreatePage() {
         bossSlug: b.bossSlug,
         buildInfo: "",
         clearTime: 0,
+        tags: new Set<BossTag>(),
         characters: [],
       }))
     );
@@ -171,6 +180,12 @@ export default function PostCreatePage() {
   function setClearTime(bossId: number, clearTime: number) {
     setBossEntries((prev) =>
       prev.map((b) => (b.bossId === bossId ? { ...b, clearTime } : b))
+    );
+  }
+
+  function setBossTags(bossId: number, tags: Set<BossTag>) {
+    setBossEntries((prev) =>
+      prev.map((b) => (b.bossId === bossId ? { ...b, tags } : b))
     );
   }
 
@@ -297,10 +312,12 @@ export default function PostCreatePage() {
         description,
         videoLink,
         difficulty,
+        tags: Array.from(postTags),
         bosses: activeBosses.map((b) => ({
           bossId: b.bossId,
           buildInfo: b.buildInfo,
           clearTime: b.clearTime,
+          tags: Array.from(b.tags),
           characters: b.characters.map((c) => ({
             charId: c.charId,
             weaponId: c.weaponId as number,
@@ -433,6 +450,8 @@ export default function PostCreatePage() {
               <option value="Dire">Dire</option>
             </select>
           </div>
+
+          <PostTagPicker selected={postTags} onChange={setPostTags} />
         </section>
 
         {/* ── Stygian select ──────────────────────────────────────────────── */}
@@ -494,6 +513,7 @@ export default function PostCreatePage() {
                       usedCharIds={allUsedCharIds}
                       onBuildInfoChange={(v) => setBuildInfo(boss.bossId, v)}
                       onClearTimeChange={(v) => setClearTime(boss.bossId, v)}
+                      onTagsChange={(tags) => setBossTags(boss.bossId, tags)}
                       onAddCharacter={(c) => addCharacterToBoss(boss.bossId, c)}
                       onRemoveCharacter={(charId) => removeCharacterFromBoss(boss.bossId, charId)}
                       onUpdateCharacter={(charId, field, value) =>
@@ -540,6 +560,7 @@ type BossSectionProps = {
   usedCharIds: Set<number>;  // char IDs already used in ANY boss in this post
   onBuildInfoChange: (v: string) => void;
   onClearTimeChange: (v: number) => void;
+  onTagsChange: (tags: Set<BossTag>) => void;
   onAddCharacter: (c: CharacterOption) => void;
   onRemoveCharacter: (charId: number) => void;
   onUpdateCharacter: (
@@ -558,6 +579,7 @@ function BossSection({
   usedCharIds,
   onBuildInfoChange,
   onClearTimeChange,
+  onTagsChange,
   onAddCharacter,
   onRemoveCharacter,
   onUpdateCharacter,
@@ -695,6 +717,16 @@ function BossSection({
             </div>
           </div>
         </div>
+
+        {/* Boss-specific tags */}
+        <TagPicker
+          label="Boss tags"
+          allTags={ALL_BOSS_TAGS}
+          labels={BOSS_TAG_LABELS}
+          selected={boss.tags}
+          onChange={onTagsChange}
+          size="xs"
+        />
 
         {/* Character picker */}
         <div className="form-control">

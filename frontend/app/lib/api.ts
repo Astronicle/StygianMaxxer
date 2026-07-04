@@ -160,6 +160,56 @@ export async function apiGetAccounts(page = 0, size = 24): Promise<Page<AccountS
   return apiFetch<Page<AccountSummary>>(`/api/accounts?page=${page}&size=${size}`);
 }
 
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+// Backend: com.stygianMaxxer.model.PostTag / BossTag.
+// PostTag is post-wide (applies to the whole clear); BossTag is scoped to a
+// single boss within the post. See PostMapper for how these are serialized.
+
+export type PostTag =
+  | "MINE"
+  | "NOT_MINE"
+  | "NO_BUILDS"
+  | "FPS_30"
+  | "FPS_60"
+  | "FPS_120"
+  | "HIGH_PING"
+  | "LOW_PING";
+
+export type BossTag =
+  | "PING_DEPENDENT"
+  | "FPS_UNLOCKER"
+  | "THIRD_PARTY_TOOLS"
+  | "MACRO"
+  | "HIGH_CPS"
+  | "HARD_COMBO"
+  | "CHEESE"
+  | "OVER_LEVEL";
+
+export const POST_TAG_LABELS: Record<PostTag, string> = {
+  MINE: "Mine",
+  NOT_MINE: "Not Mine",
+  NO_BUILDS: "No Builds",
+  FPS_30: "30 FPS",
+  FPS_60: "60 FPS",
+  FPS_120: "120 FPS",
+  HIGH_PING: "High Ping",
+  LOW_PING: "Low Ping",
+};
+
+export const BOSS_TAG_LABELS: Record<BossTag, string> = {
+  PING_DEPENDENT: "Ping Dependent",
+  FPS_UNLOCKER: "FPS Unlocker",
+  THIRD_PARTY_TOOLS: "3rd Party Tools",
+  MACRO: "Macro",
+  HIGH_CPS: "High CPS",
+  HARD_COMBO: "Hard Combo",
+  CHEESE: "Cheese",
+  OVER_LEVEL: "Over Level",
+};
+
+export const ALL_POST_TAGS = Object.keys(POST_TAG_LABELS) as PostTag[];
+export const ALL_BOSS_TAGS = Object.keys(BOSS_TAG_LABELS) as BossTag[];
+
 // ─── Posts — browse ───────────────────────────────────────────────────────────
 // Backend DTO: PostSummaryResponse { postId, title, username, stygianName, createdAt, averageRating, ratingCount, totalClearTime, bosses }
 
@@ -308,6 +358,7 @@ export interface PostBoss {
   buildInfo: string | null;
   clearTime: number;    // backend: short, seconds 0-120
   cost: number;          // auto-calculated team cost for this boss (backend: BigDecimal)
+  tags: BossTag[];        // boss-specific tags — Ping Dependent, tool/execution tags, Cheese, Over Level
   characters: PostBossCharacter[];
 }
 
@@ -317,6 +368,7 @@ export interface PostDetail {
   description: string | null;
   videoLink: string | null;
   difficulty: "Fearless" | "Dire";
+  tags: PostTag[];       // post-wide tags — Mine/Not Mine, No Builds, FPS tags, Ping tags
   createdAt: string;
   updatedAt: string;
   account: { accountId: number; username: string };
@@ -339,6 +391,7 @@ export interface PostBossUpdateEntry {
   bossId: number;
   buildInfo: string;
   clearTime: number;
+  tags?: BossTag[];
   characters: {
     charId: number;
     weaponId: number;
@@ -359,6 +412,7 @@ export async function apiUpdatePost(
     description?: string;
     videoLink?: string;
     difficulty?: "Fearless" | "Dire";
+    tags?: PostTag[];
     bosses?: PostBossUpdateEntry[];
   }
 ): Promise<PostDetail> {

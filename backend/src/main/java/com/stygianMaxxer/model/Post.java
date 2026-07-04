@@ -8,7 +8,9 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "post")
@@ -51,6 +53,15 @@ public class Post {
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    // Post-wide tags (Mine/Not Mine, No Builds, FPS tags, Ping tags — see
+    // PostTag). Boss-specific tags live on PostBoss instead.
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_tag", joinColumns = @JoinColumn(name = "post_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tag", nullable = false)
+    @Builder.Default
+    private Set<PostTag> tags = new HashSet<>();
 
     @OneToMany(
             mappedBy = "post",

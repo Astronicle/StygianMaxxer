@@ -1,5 +1,7 @@
 import CharacterBadge from "./CharacterBadge";
 import { Coins, Timer, PlayCircle } from "lucide-react";
+import TagBadges from "@/app/components/tags/TagBadges";
+import { BOSS_TAG_LABELS, type BossTag } from "@/app/lib/api";
 
 type Character = {
   id: number;
@@ -24,6 +26,7 @@ type Boss = {
   clearTime?: number; // seconds, 0-120
   cost?: number;      // auto-calculated team cost for this boss
   videoLink?: string; // link to the clear video
+  tags?: BossTag[];    // boss-specific tags — see BOSS_TAG_LABELS
   characters: Character[];
 };
 
@@ -33,7 +36,7 @@ function formatClearTime(seconds: number) {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export default function BossCard({ name, icon, buildInfo, clearTime, cost, videoLink, characters }: Boss) {
+export default function BossCard({ name, icon, buildInfo, clearTime, cost, videoLink, tags, characters }: Boss) {
   return (
     <div className="card bg-base-200 shadow-md">
       <div className="card-body gap-4">
@@ -72,6 +75,9 @@ export default function BossCard({ name, icon, buildInfo, clearTime, cost, video
             <span className="opacity-80">{buildInfo}</span>
           </div>
         )}
+
+        {/* Boss-specific tags */}
+        <TagBadges tags={tags} labels={BOSS_TAG_LABELS} />
 
         {/* Characters */}
         <div className="grid gap-3">

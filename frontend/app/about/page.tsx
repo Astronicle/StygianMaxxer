@@ -80,6 +80,75 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* How to use Tags */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold">How to Use Tags</h2>
+        <p className="opacity-70">
+          Tags are short labels that explain what is notable about the run.
+          They help viewers gain an overview about the clear. Post-wide tags
+          apply to the whole clear; boss tags apply to just one boss within
+          the post.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="card bg-base-200">
+            <div className="card-body gap-3">
+              <h3 className="font-semibold">Post-wide tags</h3>
+              <ul className="text-sm opacity-80 space-y-2.5">
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Mine</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Not Mine</span>
+                  <span className="opacity-70">— shows whether the run in the video is your own.</span>
+                </li>
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">No Builds</span>
+                  <span className="opacity-70">indicates builds are not shown in the video — builds in the description don&apos;t count. You <span className="font-semibold">must</span> use this tag if you don&apos;t have builds included.</span>
+                </li>
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">30 FPS</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">60 FPS</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">120 FPS</span>
+                  <span className="opacity-70">describe the framerate shown in the proof.</span>
+                </li>
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">High Ping</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Low Ping</span>
+                  <span className="opacity-70">explain ping conditions. Generally High Ping is red pings and Low Ping is green pings.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="card bg-base-200">
+            <div className="card-body gap-3">
+              <h3 className="font-semibold">Boss tags</h3>
+              <ul className="text-sm opacity-80 space-y-2.5">
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Ping Dependent</span>
+                  <span className="opacity-70">should be used for clears where pings can affect the outcome of the clear.</span>
+                </li>
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">FPS Unlocker</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">3rd Party Tools</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Macro</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">High CPS</span>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Hard Combo</span>
+                  <span className="opacity-70">flag hard-to-achieve inputs or outside assistance.</span>
+                </li>
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Cheese</span>
+                  <span className="opacity-70">should be used for clears that use unconventional methods to clear.</span>
+                </li>
+                <li>
+                  <span className="badge badge-sm badge-outline badge-secondary mr-1">Over Level</span>
+                  <span className="opacity-70">is used if any of the party members are above level 90.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How to submit */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Posting a Clear</h2>
@@ -212,7 +281,7 @@ export default function AboutPage() {
                 <li>Post a failed or partial attempt as if it were a clean clear.</li>
                 <li>Inflate constellations or refinements to make a team look stronger (or weaker) than it was.</li>
                 <li>Link a private/unlisted video, a platform clip that can be taken down at any time, or a link to an unrelated video.</li>
-                <li>Reuse someone else&apos;s footage as your own clear.</li>
+                <li>Forget to credit someone else&apos;s footage when posting if not yours.</li>
               </ul>
             </div>
           </div>
