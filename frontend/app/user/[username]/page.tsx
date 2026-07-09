@@ -59,7 +59,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-10">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-10">
       <UserHeader
         username={profile.username}
         charIcon={avatarIconUrl(profile.avatarCharSlug)}

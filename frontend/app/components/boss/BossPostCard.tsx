@@ -69,18 +69,18 @@ export default function BossPostCard({ post, highlightBossId }: BossPostCardProp
           <span className={`badge badge-xs font-semibold ${post.difficulty === "Dire" ? "badge-error" : "badge-warning"}`}>
             {post.difficulty}
           </span>
-          <span className="text-xs opacity-60 ml-auto">
+          <span className="text-xs opacity-60 sm:ml-auto w-full sm:w-auto">
             By {post.username} · {formattedDate}
           </span>
         </div>
 
         {/* Stat bar: cost / time / video link */}
         {scoped && (
-          <div className="flex items-center bg-base-300/50 rounded-lg px-4 py-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 bg-base-300/50 rounded-lg px-4 py-2 text-sm">
             <span className="opacity-70 flex items-center gap-1.5">
               <Coins size={14} /> COST: <span className="font-bold">{scoped.cost}</span>
             </span>
-            <span className="opacity-70 mx-auto flex items-center gap-1.5">
+            <span className="opacity-70 sm:mx-auto flex items-center gap-1.5">
               <Timer size={14} /> TIME: <span className="font-bold">{formatClearTime(scoped.clearTime)}</span>
             </span>
             <span className="flex items-center gap-2 opacity-70">

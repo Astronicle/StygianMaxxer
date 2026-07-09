@@ -44,7 +44,7 @@ function CharacterRow({ c }: { c: PostBossCharacterIcon }) {
 
 function BossColumn({ boss }: { boss: PostSummary["bosses"][number] }) {
   return (
-    <div className="flex-1 min-w-[280px] bg-base-300/40 rounded-lg p-4 space-y-3">
+    <div className="w-full sm:flex-1 sm:min-w-[280px] bg-base-300/40 rounded-lg p-4 space-y-3">
       <div className="flex items-center gap-3 text-lg">
         <img
           src={`${BOSS_ICON_BASE}/${boss.bossSlug}/model.webp`}

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-14 pb-20">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-14 pb-20">
       {/* Hero */}
       <div className="space-y-3">
         <h1 className="text-4xl font-bold">About StygianMaxxer</h1>
@@ -281,7 +281,7 @@ export default function AboutPage() {
                 <li>Post a failed or partial attempt as if it were a clean clear.</li>
                 <li>Inflate constellations or refinements to make a team look stronger (or weaker) than it was.</li>
                 <li>Link a private/unlisted video, a platform clip that can be taken down at any time, or a link to an unrelated video.</li>
-                <li>Forget to credit someone else&apos;s footage when posting if not yours.</li>
+                <li>Reuse someone else&apos;s footage as your own clear.</li>
               </ul>
             </div>
           </div>

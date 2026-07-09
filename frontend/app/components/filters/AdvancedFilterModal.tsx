@@ -251,15 +251,15 @@ export default function AdvancedFilterModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="bg-base-200 rounded-2xl w-full max-w-2xl mx-4 shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-base-300">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-base-300">
           <h2 className="text-xl font-bold">Advanced Filter</h2>
           <button type="button" className="btn btn-sm btn-ghost btn-circle" onClick={onClose}><X size={16} /></button>
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-4">
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4">
           {/* Top grid: difficulty + cost */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Difficulty */}
             <div className="bg-base-300 rounded-xl p-4">
               <p className="text-xs font-bold uppercase opacity-60 mb-2">Difficulty</p>
@@ -392,7 +392,7 @@ export default function AdvancedFilterModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-base-300">
+        <div className="flex items-center justify-between gap-2 flex-wrap px-4 sm:px-6 py-4 border-t border-base-300">
           <button type="button" className="btn btn-ghost btn-sm" onClick={handleReset}>
             Reset Advanced Filters
           </button>

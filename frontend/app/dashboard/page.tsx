@@ -76,14 +76,14 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
         <div className="alert alert-error">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-10">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-10">
       <DashboardHeader
         username={profile!.username}
         // Build avatar URL from the character's slug — falls back to the

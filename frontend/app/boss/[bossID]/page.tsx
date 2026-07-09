@@ -211,7 +211,7 @@ export default function BossDetailPage() {
   const activeAdvancedCount = countAdvanced(advanced);
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-8">
       <BossDetailHeader
         name={boss.name}
         icon={`${BOSS_ICON_BASE}/${boss.slug}/model.webp`}

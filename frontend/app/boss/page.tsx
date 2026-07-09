@@ -35,7 +35,7 @@ export default function BossBrowsePage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Bosses</h1>
         <p className="opacity-70">Browse all bosses in the Stygian database</p>

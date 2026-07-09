@@ -50,7 +50,7 @@ function CharacterRow({ c }: { c: PostBossCharacterIcon }) {
 function BossColumn({ boss, highlighted }: { boss: PostSummary["bosses"][number]; highlighted: boolean }) {
   return (
     <div
-      className={`flex-1 min-w-[280px] rounded-lg p-4 space-y-3 transition-colors ${
+      className={`w-full sm:flex-1 sm:min-w-[280px] rounded-lg p-4 space-y-3 transition-colors ${
         highlighted ? "bg-primary/15 ring-1 ring-primary" : "bg-base-300/40"
       }`}
     >
